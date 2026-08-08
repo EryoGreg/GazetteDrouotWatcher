@@ -1,3 +1,5 @@
+🇬🇧 [English](README.md) · 🇨🇳 [中文](README.zh.md) · 🇪🇸 [Español](README.es.md) · 🇮🇳 [हिन्दी](README.hi.md) · 🇸🇦 [العربية](README.ar.md) · 🇵🇹 [Português](README.pt.md) · 🇷🇺 [Русский](README.ru.md) · 🇫🇷 [Français](README.fr.md) · 🇯🇵 [日本語](README.ja.md) · 🇩🇪 [Deutsch](README.de.md)
+
 # Gazette Drouot watcher
 
 Watches one or more gazette-drouot.com rubrique (article listing) pages and fires a Windows toast notification for each new or updated article — click a toast to open it in your default browser.
