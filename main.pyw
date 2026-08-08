@@ -608,23 +608,31 @@ class App(tk.Tk):
                 self.on_close()
             return
 
-        self.log(output or self.t("log_no_output"))
+        # Translate the internal sentinels into something a user should
+        # actually see — never show a raw __LIKE_THIS__ marker, and don't
+        # log a "(no output)" filler line for the common case (success,
+        # nothing to say).
+        friendly = None
+        if output == _NOT_INSTALLED_SENTINEL:
+            friendly = self.t("diag_not_installed")
+        elif output.startswith("__CONFIG_UNREADABLE__"):
+            friendly = self.t("diag_config_unreadable")
+
+        if friendly:
+            self.log(friendly)
+        elif output:
+            self.log(output)
+
         self.log(self.t("log_ok") if ok else self.t("log_failed"))
         self.refresh_status()
         if not ok:
-            if output == _NOT_INSTALLED_SENTINEL:
-                friendly = self.t("diag_not_installed")
-            elif output.startswith("__CONFIG_UNREADABLE__"):
-                friendly = self.t("diag_config_unreadable")
-            else:
-                friendly = None
             if friendly:
                 messagebox.showerror(action_name, friendly)
             else:
                 # No known explanation for this one — show the actual error
                 # right here instead of pointing at the (non-resizable,
                 # easy-to-lose-the-relevant-line-in) log panel below.
-                detail = output.strip() or self.t("log_no_output")
+                detail = output.strip() if output else self.t("log_failed")
                 if len(detail) > 600:
                     detail = "...\n" + detail[-600:]
                 messagebox.showerror(action_name, self.t("dlg_action_failed_body", action=action_name, detail=detail))
