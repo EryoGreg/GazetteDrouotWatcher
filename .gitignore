@@ -1,0 +1,26 @@
+# Per-machine runtime state — not something to publish or share between machines
+state/
+logs/
+test/state/
+test/watcher_test.log
+test/fakesite/server.log
+test/fakesite/articles*.json
+
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# PyInstaller build artifacts and the built exe itself — a binary doesn't
+# belong in source control; rebuild it locally (see README) or attach it
+# to a GitHub Release instead.
+build/
+dist/
+*.spec
+GazetteDrouotWatcherGUI.exe
+
+# Per-machine GUI preference (theme/language choice, window position)
+gui_prefs.json
+
+# Claude Code's own local tool-permission settings — not part of the project
+.claude/
