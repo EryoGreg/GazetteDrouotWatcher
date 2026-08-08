@@ -115,12 +115,15 @@ def install_task(exe_path: str, arguments: str, working_dir: str, interval_minut
 
 @_translate_errors
 def uninstall_task():
-    """No-op (not an error) if the task isn't currently registered."""
+    """No-op (not an error) if the task isn't currently registered — but a
+    real failure to delete an EXISTING task (e.g. access denied) must not
+    be swallowed the same way, or the caller wrongly believes it worked."""
     root_folder = _root_folder()
     try:
-        root_folder.DeleteTask(TASK_NAME, 0)
+        root_folder.GetTask(TASK_NAME)
     except Exception:
-        pass
+        return  # not installed, nothing to do
+    root_folder.DeleteTask(TASK_NAME, 0)
 
 
 def get_task_status() -> str:
