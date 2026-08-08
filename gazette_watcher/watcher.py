@@ -8,9 +8,11 @@ Entry point — one call to run() does one full check cycle:
        below, it's a deliberate crash-safety choice)
     4. fire Windows toast notifications for whatever's new (notifier.py)
 
-Task Scheduler calls `python -m gazette_watcher.watcher` on a timer
-(see config.POLL_INTERVAL_MINUTES and install_task.ps1) — this script does
-not loop or sleep itself, each run is a fresh, independent process.
+Task Scheduler calls `main.pyw --watch` (or the equivalent `python -m
+gazette_watcher.watcher`) on a timer — see config.POLL_INTERVAL_MINUTES
+and gazette_watcher/task_scheduler.py for how that job gets registered.
+This script does not loop or sleep itself, each run is a fresh,
+independent process.
 """
 
 import logging

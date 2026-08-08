@@ -1,9 +1,19 @@
 """
-Gazette Drouot Watcher — control panel GUI.
+Gazette Drouot Watcher — single entry point for both halves of the app.
 
-A small desktop window for the two things you'd otherwise need PowerShell
-one-liners and a text editor for: managing the Windows Task Scheduler job
-(install / enable / disable / uninstall) and editing the app's settings.
+    main.pyw               -> opens the control panel GUI (default)
+    main.pyw --watch       -> runs one watcher check and exits, no GUI
+
+Task Scheduler is registered to call the second form — this is what makes
+the whole app a single file once built with PyInstaller (see README):
+one .exe, no separate Python install, no separate script files needed on
+the machine that runs it.
+
+The GUI is a small desktop window for the two things you'd otherwise need
+PowerShell one-liners and a text editor for: managing the Windows Task
+Scheduler job (install / enable / disable / uninstall — via the native
+Task Scheduler COM API, see gazette_watcher/task_scheduler.py, no
+PowerShell involved) and editing the app's settings.
 
 Settings are shown as a plain list of labeled fields rather than the raw
 config.py source — Save rewrites only the specific values that changed,
@@ -16,21 +26,15 @@ theme toggle opens a language menu. Switching language rebuilds the whole
 window (simplest reliable way to re-render every label), which reloads
 settings from disk — save first if you have unsaved edits.
 
-Run it by double-clicking this file (Windows runs .pyw files via
+Run the GUI by double-clicking this file (Windows runs .pyw files via
 pythonw.exe automatically, so no console window appears), or manually:
-    pythonw.exe gui.pyw
-
-This file only ever shells out to install_task.ps1 / uninstall_task.ps1 and
-a couple of Enable-ScheduledTask/Disable-ScheduledTask calls for the task
-controls — it doesn't duplicate any of that logic itself, and it never
-touches state/ or logs/.
+    pythonw.exe main.pyw
 """
 
 import ast
 import ctypes
 import importlib
 import json
-import subprocess
 import sys
 import tkinter as tk
 import webbrowser
@@ -40,12 +44,13 @@ from tkinter import messagebox, scrolledtext, ttk
 
 import flags
 import i18n
+from gazette_watcher import task_scheduler as ts
 
 # When packaged into a standalone .exe (PyInstaller), __file__ points into a
 # temporary extraction folder, not where the .exe actually sits — use the
 # .exe's own location instead in that case. Either way, this file/exe is
 # expected to live directly in the project's root folder, next to
-# gazette_watcher/, install_task.ps1, etc.
+# gazette_watcher/, etc.
 if getattr(sys, "frozen", False):
     PROJECT_DIR = Path(sys.executable).resolve().parent
 else:
@@ -54,10 +59,8 @@ else:
 sys.path.insert(0, str(PROJECT_DIR))
 
 CONFIG_PATH = PROJECT_DIR / "gazette_watcher" / "config.py"
-INSTALL_SCRIPT = PROJECT_DIR / "install_task.ps1"
-UNINSTALL_SCRIPT = PROJECT_DIR / "uninstall_task.ps1"
 ICON_PATH = PROJECT_DIR / "icon.ico"
-TASK_NAME = "GazetteDrouotWatcher"
+TASK_NAME = ts.TASK_NAME
 
 # Small per-machine GUI preferences (theme + language choice) — not app
 # behavior, so kept separate from gazette_watcher/config.py.
@@ -153,73 +156,54 @@ def _load_live_config():
 
 
 # ---------------------------------------------------------------------------
-# Task Scheduler helpers
+# Task Scheduler helpers — thin wrappers around gazette_watcher.task_scheduler
+# translating its typed exceptions into the (ok, message) shape the rest of
+# this file's action/logging flow expects.
 # ---------------------------------------------------------------------------
-# Windows-only flag that stops subprocess.run from popping up a console
-# window for the PowerShell process it launches — without this, every
-# button click briefly flashes a PowerShell window on screen.
-_NO_WINDOW = subprocess.CREATE_NO_WINDOW if hasattr(subprocess, "CREATE_NO_WINDOW") else 0
+def _resolve_scheduled_action() -> tuple[str, str, str]:
+    """(exe_path, arguments, working_dir) for what Task Scheduler should run.
+    Frozen exe: itself, with --watch. Running from source: pythonw.exe
+    running this file, with --watch."""
+    if getattr(sys, "frozen", False):
+        return sys.executable, "--watch", str(PROJECT_DIR)
+    pythonw = sys.executable
+    if pythonw.lower().endswith("python.exe"):
+        candidate = pythonw[: -len("python.exe")] + "pythonw.exe"
+        if Path(candidate).exists():
+            pythonw = candidate
+    return pythonw, f'"{Path(__file__).resolve()}" --watch', str(PROJECT_DIR)
 
-_PERMISSION_MARKERS = ("access is denied", "accessdenied", "permissiondenied", "0x80070005")
+
+# Sentinel strings recognized by _run_action to show a specific translated
+# explanation instead of the raw exception text.
+_NOT_INSTALLED_SENTINEL = "__NOT_INSTALLED__"
+_PERMISSION_DENIED_SENTINEL = "__PERMISSION_DENIED__"
 
 
-def _run_powershell(args: list[str]) -> tuple[bool, str]:
+def _call_task_scheduler(fn, *args, **kwargs) -> tuple[bool, str]:
     try:
-        result = subprocess.run(
-            ["powershell.exe", "-NoProfile", "-ExecutionPolicy", "Bypass", *args],
-            capture_output=True,
-            text=True,
-            timeout=60,
-            creationflags=_NO_WINDOW,
-        )
-        output = (result.stdout or "") + (result.stderr or "")
-        return result.returncode == 0, output.strip()
+        fn(*args, **kwargs)
+        return True, ""
+    except ts.TaskNotInstalledError:
+        return False, _NOT_INSTALLED_SENTINEL
+    except ts.PermissionDeniedError:
+        return False, _PERMISSION_DENIED_SENTINEL
     except Exception as e:
         return False, str(e)
 
 
+def _do_install() -> tuple[bool, str]:
+    try:
+        config = _load_live_config()
+        interval = int(config.POLL_INTERVAL_MINUTES)
+    except Exception as e:
+        return False, f"__CONFIG_UNREADABLE__{e}"
+    exe_path, arguments, working_dir = _resolve_scheduled_action()
+    return _call_task_scheduler(ts.install_task, exe_path, arguments, working_dir, interval)
+
+
 def _get_task_status_code() -> str:
-    """Returns "not_installed", "ready", "disabled", or the raw Windows
-    status string for anything else we don't have a translation for."""
-    ok, output = _run_powershell(
-        ["-Command", f"(Get-ScheduledTask -TaskName '{TASK_NAME}' -ErrorAction SilentlyContinue).State"]
-    )
-    output = output.strip()
-    if not ok or not output:
-        return "not_installed"
-    if output == "Ready":
-        return "ready"
-    if output == "Disabled":
-        return "disabled"
-    return output
-
-
-def _is_permission_error(output: str) -> bool:
-    lowered = output.lower()
-    return any(marker in lowered for marker in _PERMISSION_MARKERS)
-
-
-# Known, expected failure patterns for the task-control actions, mapped to a
-# plain-language explanation of what actually happened and what to do about
-# it — shown directly in the popup instead of just "check the log", since
-# the log panel isn't resizable/easy to scan for the one relevant line.
-def _diagnose_task_error(lang: str, output: str) -> str | None:
-    lowered = output.lower()
-
-    # Enable/Disable (and, in principle, other task-lookup calls) against a
-    # task that isn't registered — confirmed exact wording via a real test.
-    if "cannot find the file specified" in lowered or "0x80070002" in lowered:
-        return i18n.t(lang, "diag_not_installed")
-
-    # install_task.ps1's own explicit check for a misconfigured Python path.
-    if "pythonw.exe not found" in lowered:
-        return i18n.t(lang, "diag_python_not_found")
-
-    # install_task.ps1's own explicit check when config.py can't be parsed.
-    if "couldn't read poll_interval_minutes" in lowered:
-        return i18n.t(lang, "diag_config_unreadable")
-
-    return None
+    return ts.get_task_status()
 
 
 def _is_admin() -> bool:
@@ -616,19 +600,24 @@ class App(tk.Tk):
         action_name = self.t(action_key)
         self.log(self.t("log_action_dashes", action=action_name))
         ok, output = fn()
-        self.log(output or self.t("log_no_output"))
 
-        if not ok and not _is_admin() and _is_permission_error(output):
+        if not ok and output == _PERMISSION_DENIED_SENTINEL and not _is_admin():
             self.log(self.t("log_permission_hint"))
             if messagebox.askyesno(action_name, self.t("dlg_admin_needed_body", action=action_name)):
                 _relaunch_as_admin()
                 self.on_close()
             return
 
+        self.log(output or self.t("log_no_output"))
         self.log(self.t("log_ok") if ok else self.t("log_failed"))
         self.refresh_status()
         if not ok:
-            friendly = _diagnose_task_error(self.lang, output)
+            if output == _NOT_INSTALLED_SENTINEL:
+                friendly = self.t("diag_not_installed")
+            elif output.startswith("__CONFIG_UNREADABLE__"):
+                friendly = self.t("diag_config_unreadable")
+            else:
+                friendly = None
             if friendly:
                 messagebox.showerror(action_name, friendly)
             else:
@@ -641,20 +630,16 @@ class App(tk.Tk):
                 messagebox.showerror(action_name, self.t("dlg_action_failed_body", action=action_name, detail=detail))
 
     def on_install(self):
-        self._run_action("btn_install", lambda: _run_powershell(["-File", str(INSTALL_SCRIPT)]))
+        self._run_action("btn_install", _do_install)
 
     def on_uninstall(self):
-        self._run_action("btn_uninstall", lambda: _run_powershell(["-File", str(UNINSTALL_SCRIPT)]))
+        self._run_action("btn_uninstall", lambda: _call_task_scheduler(ts.uninstall_task))
 
     def on_enable(self):
-        self._run_action(
-            "btn_enable", lambda: _run_powershell(["-Command", f"Enable-ScheduledTask -TaskName '{TASK_NAME}'"])
-        )
+        self._run_action("btn_enable", lambda: _call_task_scheduler(ts.set_enabled, True))
 
     def on_disable(self):
-        self._run_action(
-            "btn_disable", lambda: _run_powershell(["-Command", f"Disable-ScheduledTask -TaskName '{TASK_NAME}'"])
-        )
+        self._run_action("btn_disable", lambda: _call_task_scheduler(ts.set_enabled, False))
 
     # -- settings section -------------------------------------------------------
     def _build_settings_section(self):
@@ -900,4 +885,11 @@ class App(tk.Tk):
 
 
 if __name__ == "__main__":
-    App().mainloop()
+    if "--watch" in sys.argv:
+        # This is what Task Scheduler actually calls — run one check and exit,
+        # no GUI. See gazette_watcher/watcher.py for what a "check" does.
+        from gazette_watcher import watcher
+
+        watcher.run()
+    else:
+        App().mainloop()

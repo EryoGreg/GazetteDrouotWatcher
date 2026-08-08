@@ -19,48 +19,31 @@ Watches one or more gazette-drouot.com rubrique (article listing) pages and fire
 
 ## Configuration
 
-**`gazette_watcher/config.py` is the single file to edit** for everything: which pages to watch, how often to check, how deep to scan, notification flood limits, alert cooldowns, etc. — each setting has a comment explaining it. After changing anything there, the change takes effect on the next run, **except** `POLL_INTERVAL_MINUTES`, which also needs `install_task.ps1` re-run once to update the actual Windows Task Scheduler job.
+**`gazette_watcher/config.py` is the single file to edit** for everything: which pages to watch, how often to check, how deep to scan, notification flood limits, alert cooldowns, etc. — each setting has a comment explaining it (or edit them through the control panel's Settings tab instead, see below). After changing anything there, the change takes effect on the next run, **except** `POLL_INTERVAL_MINUTES`, which also needs clicking **Install** again in the control panel once to update the actual Windows Task Scheduler job with the new interval.
 
 ## Control panel GUI
 
-A desktop window for everything below without touching PowerShell or config.py directly: install / enable / disable / uninstall the scheduled task, and a settings panel (with a "Reset to defaults" if something gets messed up) instead of hand-editing the config file. The flag icon switches the UI language (English, 中文, Español, हिन्दी, العربية, Português, Русский, Français, 日本語, Deutsch — defaults to your Windows UI language, falls back to English); the sun/moon icon switches light/dark (defaults to your Windows theme). Both choices persist in `gui_prefs.json`.
+**This is the app** — a single, self-contained `.exe`, no separate Python install or script files needed on the machine that runs it. A desktop window for everything: install / enable / disable / uninstall the scheduled task (via the native Task Scheduler API directly, no PowerShell involved), and a settings panel (with a "Reset to defaults" if something gets messed up) instead of hand-editing the config file. The flag icon switches the UI language (English, 中文, Español, हिन्दी, العربية, Português, Русский, Français, 日本語, Deutsch — defaults to your Windows UI language, falls back to English); the sun/moon icon switches light/dark (defaults to your Windows theme). Both choices persist in `gui_prefs.json`.
 
-**If you just have the `.exe`:** double-click `GazetteDrouotWatcherGUI.exe` — nothing else to install. It expects to sit directly in this project folder, next to `gazette_watcher/`, `install_task.ps1`, etc.
+**If you just have the `.exe`:** double-click `GazetteDrouotWatcher.exe` — nothing else to install. It expects to sit directly in this project folder, next to `gazette_watcher/`, etc. Click **Install** in the window to register the scheduled task — from then on it checks automatically in the background, in the interval set in `config.py`, without this window (or the app at all) needing to stay open, and it starts itself again after every PC restart.
 
-**Running from source instead:** double-click `gui.pyw` (Windows runs `.pyw` files via `pythonw.exe`, no console window), or:
+**Running from source instead:** double-click `main.pyw` (Windows runs `.pyw` files via `pythonw.exe`, no console window), or:
 ```
-pythonw.exe gui.pyw
+pythonw.exe main.pyw
 ```
 
 **Building the `.exe` yourself** (it's gitignored — not committed to source, rebuild it or grab it from a Release):
 ```
 pip install pyinstaller
-python -m PyInstaller --onefile --windowed --name GazetteDrouotWatcherGUI --icon icon.ico gui.pyw
+python -m PyInstaller --onefile --windowed --name GazetteDrouotWatcher --icon icon.ico main.pyw
 ```
-Then copy `dist/GazetteDrouotWatcherGUI.exe` into the project root (next to `gui.pyw`) and delete the `build/`, `dist/`, and `*.spec` leftovers.
+Then copy `dist/GazetteDrouotWatcher.exe` into the project root (next to `main.pyw`) and delete the `build/`, `dist/`, and `*.spec` leftovers.
 
 ## Manual run
 
+`main.pyw --watch` (or the equivalent `GazetteDrouotWatcher.exe --watch`) is what the scheduled task actually calls — runs one check and exits, no GUI. This is also the same as:
 ```
 python -m gazette_watcher.watcher
-```
-
-## Scheduling
-
-Run `install_task.ps1` to register a "GazetteDrouotWatcher" Task Scheduler job that runs on the interval set in `config.py`, while you're logged in. Re-run it any time (e.g. after changing `POLL_INTERVAL_MINUTES`) to update the already-registered task.
-
-```
-powershell -ExecutionPolicy Bypass -File install_task.ps1
-```
-
-Run once immediately for testing:
-```
-powershell -Command "Start-ScheduledTask -TaskName GazetteDrouotWatcher"
-```
-
-Remove it with `uninstall_task.ps1`:
-```
-powershell -ExecutionPolicy Bypass -File uninstall_task.ps1
 ```
 
 ## If something goes wrong

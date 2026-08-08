@@ -19,48 +19,31 @@
 
 ## 配置
 
-**`gazette_watcher/config.py` 是唯一需要编辑的文件**，涵盖一切设置：监控哪些页面、检查频率、扫描深度、通知上限、提醒冷却时间等——每个设置项都有注释说明。修改后将在下次运行时生效，**唯一例外**是 `POLL_INTERVAL_MINUTES`，修改后还需重新运行一次 `install_task.ps1`，才能更新实际的 Windows 计划任务。
+**`gazette_watcher/config.py` 是唯一需要编辑的文件**，涵盖一切设置：监控哪些页面、检查频率、扫描深度、通知上限、提醒冷却时间等——每个设置项都有注释说明（也可以在控制面板的"设置"标签页中编辑，见下文）。修改后将在下次运行时生效，**唯一例外**是 `POLL_INTERVAL_MINUTES`，修改后还需在控制面板中再次点击**"安装"**，才能以新的间隔更新实际的 Windows 计划任务。
 
 ## 控制面板（图形界面）
 
-一个桌面窗口，涵盖以下所有操作，无需直接使用 PowerShell 或编辑 config.py：安装/启用/禁用/卸载计划任务，以及一个设置面板（如果设置出错，可"恢复默认设置"），取代手动编辑配置文件。国旗图标用于切换界面语言（英语、中文、西班牙语、हिन्दी、العربية、葡萄牙语、俄语、法语、日本語、德语——默认跟随 Windows 界面语言，不支持时回退为英语）；太阳/月亮图标用于切换浅色/深色模式（默认跟随 Windows 主题）。两项选择都会保存在 `gui_prefs.json` 中。
+**这就是应用程序本身**——单个独立的 `.exe` 文件，运行它的电脑无需单独安装 Python，也不需要任何脚本文件。一个桌面窗口，涵盖以下所有操作：安装/启用/禁用/卸载计划任务（直接通过原生的计划任务 API，不涉及 PowerShell），以及一个设置面板（如果设置出错，可"恢复默认设置"），取代手动编辑配置文件。国旗图标用于切换界面语言（英语、中文、西班牙语、हिन्दी、العربية、葡萄牙语、俄语、法语、日本語、德语——默认跟随 Windows 界面语言，不支持时回退为英语）；太阳/月亮图标用于切换浅色/深色模式（默认跟随 Windows 主题）。两项选择都会保存在 `gui_prefs.json` 中。
 
-**如果您只有 `.exe` 文件：**双击 `GazetteDrouotWatcherGUI.exe` 即可——无需安装其他任何东西。该文件需直接放在此项目文件夹中，与 `gazette_watcher/`、`install_task.ps1` 等文件同级。
+**如果您只有 `.exe` 文件：**双击 `GazetteDrouotWatcher.exe` 即可——无需安装其他任何东西。该文件需直接放在此项目文件夹中，与 `gazette_watcher/` 等同级。在窗口中点击**"安装"**即可注册计划任务——此后程序会按照 `config.py` 中设定的间隔在后台自动检查，无需保持此窗口（甚至整个程序）打开，并且每次电脑重启后会自动重新启动。
 
-**从源代码运行：**双击 `gui.pyw`（Windows 会通过 `pythonw.exe` 运行 `.pyw` 文件，不会出现控制台窗口），或运行：
+**从源代码运行：**双击 `main.pyw`（Windows 会通过 `pythonw.exe` 运行 `.pyw` 文件，不会出现控制台窗口），或运行：
 ```
-pythonw.exe gui.pyw
+pythonw.exe main.pyw
 ```
 
 **自行构建 `.exe`**（该文件已被 gitignore 排除——不会提交到源代码仓库，请自行重新构建或从 Release 中下载）：
 ```
 pip install pyinstaller
-python -m PyInstaller --onefile --windowed --name GazetteDrouotWatcherGUI --icon icon.ico gui.pyw
+python -m PyInstaller --onefile --windowed --name GazetteDrouotWatcher --icon icon.ico main.pyw
 ```
-然后将 `dist/GazetteDrouotWatcherGUI.exe` 复制到项目根目录（与 `gui.pyw` 同级），并删除残留的 `build/`、`dist/` 和 `*.spec`。
+然后将 `dist/GazetteDrouotWatcher.exe` 复制到项目根目录（与 `main.pyw` 同级），并删除残留的 `build/`、`dist/` 和 `*.spec`。
 
 ## 手动运行
 
+`main.pyw --watch`（或等效的 `GazetteDrouotWatcher.exe --watch`）就是计划任务实际调用的命令——执行一次检查后退出，没有图形界面。这也等同于：
 ```
 python -m gazette_watcher.watcher
-```
-
-## 计划任务
-
-运行 `install_task.ps1`，即可注册一个名为 "GazetteDrouotWatcher" 的计划任务，只要您处于登录状态，它就会按照 `config.py` 中设定的间隔运行。可随时重新运行该脚本（例如修改 `POLL_INTERVAL_MINUTES` 后）以更新已注册的任务。
-
-```
-powershell -ExecutionPolicy Bypass -File install_task.ps1
-```
-
-立即手动运行一次以便测试：
-```
-powershell -Command "Start-ScheduledTask -TaskName GazetteDrouotWatcher"
-```
-
-使用 `uninstall_task.ps1` 将其移除：
-```
-powershell -ExecutionPolicy Bypass -File uninstall_task.ps1
 ```
 
 ## 出现问题时

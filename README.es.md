@@ -19,48 +19,31 @@ Vigila una o varias páginas de rúbrica (listados de artículos) de gazette-dro
 
 ## Configuración
 
-**`gazette_watcher/config.py` es el único archivo a editar** para todo: qué páginas vigilar, con qué frecuencia comprobar, qué tan profundo analizar, límites de notificación, tiempos de espera de alertas, etc. — cada ajuste tiene un comentario explicativo. Tras cualquier cambio ahí, tendrá efecto en la siguiente ejecución, **excepto** `POLL_INTERVAL_MINUTES`, que también requiere volver a ejecutar `install_task.ps1` una vez para actualizar la tarea real del Programador de tareas de Windows.
+**`gazette_watcher/config.py` es el único archivo a editar** para todo: qué páginas vigilar, con qué frecuencia comprobar, qué tan profundo analizar, límites de notificación, tiempos de espera de alertas, etc. — cada ajuste tiene un comentario explicativo (o edítelos desde la pestaña Configuración del panel de control, vea abajo). Tras cualquier cambio ahí, tendrá efecto en la siguiente ejecución, **excepto** `POLL_INTERVAL_MINUTES`, que también requiere volver a hacer clic en **Instalar** en el panel de control para actualizar la tarea real del Programador de tareas de Windows con el nuevo intervalo.
 
 ## Panel de control (GUI)
 
-Una ventana de escritorio para todo lo siguiente sin tocar PowerShell ni config.py directamente: instalar / activar / desactivar / desinstalar la tarea programada, y un panel de configuración (con "Restablecer valores predeterminados" si algo se estropea) en lugar de editar el archivo de configuración a mano. El icono de la bandera cambia el idioma de la interfaz (inglés, 中文, español, हिन्दी, العربية, português, русский, français, 日本語, alemán — sigue por defecto el idioma de Windows, y si no es compatible usa inglés); el icono sol/luna alterna claro/oscuro (sigue por defecto el tema de Windows). Ambas elecciones se guardan en `gui_prefs.json`.
+**Esta es la aplicación** — un único `.exe` autónomo, sin necesidad de instalar Python por separado ni de archivos de script en la máquina que lo ejecute. Una ventana de escritorio para todo: instalar / activar / desactivar / desinstalar la tarea programada (mediante la API nativa del Programador de tareas directamente, sin PowerShell), y un panel de configuración (con "Restablecer valores predeterminados" si algo se estropea) en lugar de editar el archivo de configuración a mano. El icono de la bandera cambia el idioma de la interfaz (inglés, 中文, español, हिन्दी, العربية, português, русский, français, 日本語, alemán — sigue por defecto el idioma de Windows, y si no es compatible usa inglés); el icono sol/luna alterna claro/oscuro (sigue por defecto el tema de Windows). Ambas elecciones se guardan en `gui_prefs.json`.
 
-**Si solo tiene el `.exe`:** haga doble clic en `GazetteDrouotWatcherGUI.exe` — no hay nada más que instalar. Debe estar directamente en esta carpeta del proyecto, junto a `gazette_watcher/`, `install_task.ps1`, etc.
+**Si solo tiene el `.exe`:** haga doble clic en `GazetteDrouotWatcher.exe` — no hay nada más que instalar. Debe estar directamente en esta carpeta del proyecto, junto a `gazette_watcher/`, etc. Haga clic en **Instalar** en la ventana para registrar la tarea programada — a partir de ahí, la comprobación se hace automáticamente en segundo plano, con el intervalo definido en `config.py`, sin que esta ventana (ni la aplicación) necesite permanecer abierta, y se inicia sola de nuevo tras cada reinicio del PC.
 
-**Si lo ejecuta desde el código fuente:** haga doble clic en `gui.pyw` (Windows ejecuta los archivos `.pyw` mediante `pythonw.exe`, sin ventana de consola), o:
+**Si lo ejecuta desde el código fuente:** haga doble clic en `main.pyw` (Windows ejecuta los archivos `.pyw` mediante `pythonw.exe`, sin ventana de consola), o:
 ```
-pythonw.exe gui.pyw
+pythonw.exe main.pyw
 ```
 
 **Para compilar el `.exe` usted mismo** (está excluido de git — no se sube al repositorio, reconstrúyalo o descárguelo de una Release):
 ```
 pip install pyinstaller
-python -m PyInstaller --onefile --windowed --name GazetteDrouotWatcherGUI --icon icon.ico gui.pyw
+python -m PyInstaller --onefile --windowed --name GazetteDrouotWatcher --icon icon.ico main.pyw
 ```
-Luego copie `dist/GazetteDrouotWatcherGUI.exe` a la raíz del proyecto (junto a `gui.pyw`) y elimine los restos de `build/`, `dist/` y `*.spec`.
+Luego copie `dist/GazetteDrouotWatcher.exe` a la raíz del proyecto (junto a `main.pyw`) y elimine los restos de `build/`, `dist/` y `*.spec`.
 
 ## Ejecución manual
 
+`main.pyw --watch` (o el equivalente `GazetteDrouotWatcher.exe --watch`) es lo que realmente llama la tarea programada — ejecuta una comprobación y termina, sin interfaz. También equivale a:
 ```
 python -m gazette_watcher.watcher
-```
-
-## Programación
-
-Ejecute `install_task.ps1` para registrar una tarea "GazetteDrouotWatcher" en el Programador de tareas, que se ejecuta según el intervalo definido en `config.py` mientras esté conectado. Vuelva a ejecutarlo en cualquier momento (por ejemplo, tras cambiar `POLL_INTERVAL_MINUTES`) para actualizar la tarea ya registrada.
-
-```
-powershell -ExecutionPolicy Bypass -File install_task.ps1
-```
-
-Para ejecutarlo una vez de inmediato, con fines de prueba:
-```
-powershell -Command "Start-ScheduledTask -TaskName GazetteDrouotWatcher"
-```
-
-Elimínela con `uninstall_task.ps1`:
-```
-powershell -ExecutionPolicy Bypass -File uninstall_task.ps1
 ```
 
 ## Si algo falla

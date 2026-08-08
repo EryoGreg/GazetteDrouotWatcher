@@ -1,14 +1,23 @@
 """
 All the settings you're likely to want to tweak live in this one file.
 After changing anything here, the change takes effect on the very next run —
-EXCEPT for POLL_INTERVAL_MINUTES, which also requires re-running
-install_task.ps1 once (it reads this file to (re-)register the Windows
-Task Scheduler job with the new interval).
+EXCEPT for POLL_INTERVAL_MINUTES, which also requires clicking Install
+again in the control panel (or re-running with --watch's caller) to
+re-register the Windows Task Scheduler job with the new interval.
 """
 
+import sys
 from pathlib import Path
 
-BASE_DIR = Path(__file__).resolve().parent.parent
+# When packaged into a standalone .exe (PyInstaller), __file__ points into a
+# temporary extraction folder, not where the .exe actually sits — use the
+# .exe's own location instead in that case, same reasoning as main.pyw's
+# PROJECT_DIR. Without this, a frozen exe's state/logs go into that
+# temp folder and vanish when it exits, instead of into the real project dir.
+if getattr(sys, "frozen", False):
+    BASE_DIR = Path(sys.executable).resolve().parent
+else:
+    BASE_DIR = Path(__file__).resolve().parent.parent
 STATE_DIR = BASE_DIR / "state"
 LOG_FILE = BASE_DIR / "logs" / "watcher.log"
 
@@ -38,9 +47,9 @@ RUBRIQUES = [
 
 
 # ---------------------------------------------------------------------------
-# How often to check. Read by install_task.ps1 when (re-)registering the
-# Task Scheduler job — changing this number requires re-running that script
-# once for the new interval to actually take effect.
+# How often to check. Read when the control panel's Install button
+# (re-)registers the Task Scheduler job — changing this number requires
+# clicking Install again once for the new interval to actually take effect.
 # ---------------------------------------------------------------------------
 POLL_INTERVAL_MINUTES = 15
 

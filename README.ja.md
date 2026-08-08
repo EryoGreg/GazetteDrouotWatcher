@@ -19,48 +19,31 @@ gazette-drouot.com の1つまたは複数のルブリック（記事一覧）ペ
 
 ## 設定
 
-**すべての設定は `gazette_watcher/config.py` という1つのファイルで編集します**：監視するページ、確認頻度、スキャンの深さ、通知の上限、警告のクールダウンなど——各設定には説明コメントが付いています。ここでの変更は次回の実行時に反映されますが、**例外として** `POLL_INTERVAL_MINUTES` を変更した場合は、実際の Windows タスク スケジューラのタスクを更新するために `install_task.ps1` をもう一度実行する必要があります。
+**すべての設定は `gazette_watcher/config.py` という1つのファイルで編集します**：監視するページ、確認頻度、スキャンの深さ、通知の上限、警告のクールダウンなど——各設定には説明コメントが付いています（またはコントロールパネルの設定タブから編集することもできます。下記参照）。ここでの変更は次回の実行時に反映されますが、**例外として** `POLL_INTERVAL_MINUTES` を変更した場合は、コントロールパネルで**「インストール」**をもう一度クリックして、新しい間隔で実際の Windows タスク スケジューラのタスクを更新する必要があります。
 
 ## コントロールパネル（GUI）
 
-PowerShell や config.py を直接操作することなく、以下をすべて行えるデスクトップウィンドウです：スケジュールされたタスクのインストール／有効化／無効化／アンインストール、そして設定ファイルを手動で編集する代わりに使える設定パネル（何か問題が起きた場合の「既定値に戻す」機能付き）。旗のアイコンでインターフェースの言語を切り替えられます（英語、中文、Español、हिन्दी、العربية、Português、Русский、Français、日本語、ドイツ語——既定では Windows の表示言語に従い、対応していない場合は英語にフォールバックします）。太陽/月のアイコンでライト/ダークモードを切り替えられます（既定では Windows のテーマに従います）。両方の選択は `gui_prefs.json` に保存されます。
+**これがアプリケーション本体です**——単一の自己完結型 `.exe` で、実行するマシンに別途 Python をインストールしたりスクリプトファイルを用意したりする必要はありません。以下をすべて行えるデスクトップウィンドウです：スケジュールされたタスクのインストール／有効化／無効化／アンインストール（PowerShell を介さず、ネイティブのタスク スケジューラ API を直接使用)、そして設定ファイルを手動で編集する代わりに使える設定パネル（何か問題が起きた場合の「既定値に戻す」機能付き）。旗のアイコンでインターフェースの言語を切り替えられます（英語、中文、Español、हिन्दी、العربية、Português、Русский、Français、日本語、ドイツ語——既定では Windows の表示言語に従い、対応していない場合は英語にフォールバックします）。太陽/月のアイコンでライト/ダークモードを切り替えられます（既定では Windows のテーマに従います）。両方の選択は `gui_prefs.json` に保存されます。
 
-**`.exe` だけをお持ちの場合：** `GazetteDrouotWatcherGUI.exe` をダブルクリックするだけで、他に何もインストールする必要はありません。このファイルは、`gazette_watcher/` や `install_task.ps1` などと同じ、このプロジェクトフォルダーの直下に置いてください。
+**`.exe` だけをお持ちの場合：** `GazetteDrouotWatcher.exe` をダブルクリックするだけで、他に何もインストールする必要はありません。このファイルは、`gazette_watcher/` などと同じ、このプロジェクトフォルダーの直下に置いてください。ウィンドウ内の**「インストール」**をクリックするとスケジュールされたタスクが登録され、それ以降は `config.py` で設定した間隔でバックグラウンドで自動的にチェックが行われます。このウィンドウ（あるいはアプリそのもの）を開いたままにしておく必要はなく、PC の再起動後も自動的に再び起動します。
 
-**代わりにソースから実行する場合：** `gui.pyw` をダブルクリックするか（Windows は `.pyw` ファイルを `pythonw.exe` 経由で実行するため、コンソールウィンドウは表示されません）、次のコマンドを実行してください：
+**代わりにソースから実行する場合：** `main.pyw` をダブルクリックするか（Windows は `.pyw` ファイルを `pythonw.exe` 経由で実行するため、コンソールウィンドウは表示されません）、次のコマンドを実行してください：
 ```
-pythonw.exe gui.pyw
+pythonw.exe main.pyw
 ```
 
 **`.exe` を自分でビルドする場合**（gitignore で除外されているためソースには含まれていません。自分で再ビルドするか、Release からダウンロードしてください）：
 ```
 pip install pyinstaller
-python -m PyInstaller --onefile --windowed --name GazetteDrouotWatcherGUI --icon icon.ico gui.pyw
+python -m PyInstaller --onefile --windowed --name GazetteDrouotWatcher --icon icon.ico main.pyw
 ```
-その後、`dist/GazetteDrouotWatcherGUI.exe` をプロジェクトのルート（`gui.pyw` と同じ場所）にコピーし、残った `build/`、`dist/`、`*.spec` を削除してください。
+その後、`dist/GazetteDrouotWatcher.exe` をプロジェクトのルート（`main.pyw` と同じ場所）にコピーし、残った `build/`、`dist/`、`*.spec` を削除してください。
 
 ## 手動実行
 
+`main.pyw --watch`（または同等の `GazetteDrouotWatcher.exe --watch`）が、実際にスケジュールされたタスクが呼び出しているものです——GUI なしで1回チェックを実行して終了します。これは次と同じでもあります：
 ```
 python -m gazette_watcher.watcher
-```
-
-## スケジュール設定
-
-`install_task.ps1` を実行すると、「GazetteDrouotWatcher」というタスクがタスク スケジューラに登録され、ログオン中は `config.py` で設定した間隔で実行されます。すでに登録済みのタスクを更新したい場合（`POLL_INTERVAL_MINUTES` を変更した後など）は、いつでも再実行してください。
-
-```
-powershell -ExecutionPolicy Bypass -File install_task.ps1
-```
-
-テスト用にすぐ1回だけ実行する場合：
-```
-powershell -Command "Start-ScheduledTask -TaskName GazetteDrouotWatcher"
-```
-
-`uninstall_task.ps1` で削除できます：
-```
-powershell -ExecutionPolicy Bypass -File uninstall_task.ps1
 ```
 
 ## 問題が発生した場合

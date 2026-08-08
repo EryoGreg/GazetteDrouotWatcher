@@ -17,7 +17,7 @@ venv/
 build/
 dist/
 *.spec
-GazetteDrouotWatcherGUI.exe
+GazetteDrouotWatcher.exe
 
 # Per-machine GUI preference (theme/language choice, window position)
 gui_prefs.json
