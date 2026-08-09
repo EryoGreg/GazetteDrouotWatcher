@@ -293,6 +293,23 @@ def _get_task_status_code() -> str:
     return ts.get_task_status()
 
 
+def _do_sync_installed_task() -> tuple[bool, str]:
+    """Re-registers the scheduled task with whatever POLL_INTERVAL_MINUTES
+    was just saved, preserving its enabled/disabled state. Called after a
+    Settings Save so a changed interval takes effect without a separate
+    Install click — but install_task() always sets Enabled=True on the task
+    it (re)registers (see task_scheduler.py), so a task the user had
+    deliberately disabled needs disabling again right after, or Save would
+    silently turn a disabled watcher back on."""
+    was_disabled = _get_task_status_code() == "disabled"
+    ok, output = _do_install()
+    if not ok:
+        return ok, output
+    if was_disabled:
+        return _call_task_scheduler(ts.set_enabled, False)
+    return True, ""
+
+
 def _is_admin() -> bool:
     try:
         return bool(ctypes.windll.shell32.IsUserAnAdmin())
@@ -1141,6 +1158,19 @@ class App(tk.Tk):
             messagebox.showerror(self.t("err_save_failed_title"), self.t("err_save_failed_body", error=e))
             return
         self.log(self.t("log_saved_settings"))
+
+        # If the task is already installed, re-register it now so a changed
+        # POLL_INTERVAL_MINUTES takes effect immediately instead of silently
+        # waiting for a manual Install click. Skipped entirely when the task
+        # isn't installed at all — Save shouldn't be the thing that starts
+        # scheduling it. _do_sync_installed_task() preserves disabled state.
+        if _get_task_status_code() != "not_installed":
+            self._run_action("action_task_sync", _do_sync_installed_task)
+            if not self.winfo_exists():
+                # _run_action's permission-denied path can offer to relaunch
+                # as admin, which closes this window — nothing left to do.
+                return
+
         self.load_settings()
         self._flash_saved_rows(dirty_field_names, dirty_rubrique_indices)
         messagebox.showinfo(self.t("dlg_saved_title"), self.t("dlg_saved_body"))
