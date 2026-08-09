@@ -362,25 +362,26 @@ def _relaunch_as_admin() -> bool:
 # Theme
 # ---------------------------------------------------------------------------
 THEMES = {
+    # "Indigo Slate" -- picked after comparing 5 candidates side by side
+    # (see git tag before-light-theme-experiment for the old flat
+    # white/grey version and the other 4 candidates).
     "light": {
-        "bg": "#f3f3f3",
-        "fg": "#1a1a1a",
-        "entry_bg": "#ffffff",
-        "entry_fg": "#1a1a1a",
-        "desc_fg": "#666666",
-        "log_bg": "#ffffff",
-        "log_fg": "#1a1a1a",
-        "border": "#c9c9c9",
-        "link_fg": "#0066cc",
-        "warning_fg": "#C0392B",
+        "bg": "#F5F6FA",
+        "fg": "#1E2129",
+        "entry_bg": "#FFFFFF",
+        "entry_fg": "#1E2129",
+        "desc_fg": "#6B7280",
+        "log_bg": "#FFFFFF",
+        "log_fg": "#1E2129",
+        "border": "#D8DAE5",
+        "link_fg": "#4F46E5",
+        "warning_fg": "#DC2626",
+        "accent_active": "#4338CA",  # pressed/hover shade of link_fg, for filled Primary.TButton
+        "accent_fg": "#FFFFFF",  # text color on top of a link_fg-filled button
     },
     # Dracula palette (https://draculatheme.com) — Background/Foreground for
     # the base, Selection for input fields (visually distinct from the main
     # background), Comment for secondary/description text.
-    #
-    # NOTE: dark mode is deliberately left untouched by the light-palette
-    # experiment below — every "if resolved == 'light'" branch this session
-    # added only ever reads from LIGHT_VARIANTS, never from this dict.
     "dark": {
         "bg": "#282A36",
         "fg": "#F8F8F2",
@@ -392,82 +393,8 @@ THEMES = {
         "border": "#6272A4",
         "link_fg": "#8BE9FD",  # Dracula Cyan
         "warning_fg": "#FF5555",  # Dracula Red
-    },
-}
-
-# ---------------------------------------------------------------------------
-# EXPERIMENTAL: 5 candidate replacements for light mode, picked with a
-# numbered 1-5 selector next to the theme toggle (only shown in light mode).
-# Reason for existing at all: the current light theme is flat white/grey
-# with no button depth (clam theme gives dark-mode buttons a visible bevel
-# against the dark background almost by accident; against light backgrounds
-# the same default border colors just disappear) — reads as dated rather
-# than deliberate. Each variant below pairs a tinted (not pure white/grey)
-# page background with a distinct accent hue, plus a matching border color
-# used for an explicit raised button relief (see apply_theme) to restore
-# that sense of depth. Once one is picked, this dict collapses back down to
-# a single THEMES["light"] and this whole selector goes away.
-# ---------------------------------------------------------------------------
-LIGHT_VARIANTS = {
-    1: {  # Indigo Slate -- cool neutral, modern SaaS-app look
-        "bg": "#F5F6FA",
-        "fg": "#1E2129",
-        "entry_bg": "#FFFFFF",
-        "entry_fg": "#1E2129",
-        "desc_fg": "#6B7280",
-        "log_bg": "#FFFFFF",
-        "log_fg": "#1E2129",
-        "border": "#D8DAE5",
-        "link_fg": "#4F46E5",
-        "warning_fg": "#DC2626",
-    },
-    2: {  # Warm Terracotta -- cream page, orange/clay accent
-        "bg": "#FBF7F0",
-        "fg": "#2E2A24",
-        "entry_bg": "#FFFFFF",
-        "entry_fg": "#2E2A24",
-        "desc_fg": "#8A7F6E",
-        "log_bg": "#FFFFFF",
-        "log_fg": "#2E2A24",
-        "border": "#E8DFD0",
-        "link_fg": "#E07A5F",
-        "warning_fg": "#C0392B",
-    },
-    3: {  # Mint Teal -- fresh, slightly cool-green
-        "bg": "#F2FBF9",
-        "fg": "#1B2E2B",
-        "entry_bg": "#FFFFFF",
-        "entry_fg": "#1B2E2B",
-        "desc_fg": "#5B7C77",
-        "log_bg": "#FFFFFF",
-        "log_fg": "#1B2E2B",
-        "border": "#D3EDE7",
-        "link_fg": "#0D9488",
-        "warning_fg": "#DC2626",
-    },
-    4: {  # Rose Coral -- warm pink-leaning, friendly/approachable
-        "bg": "#FDF4F5",
-        "fg": "#2E2126",
-        "entry_bg": "#FFFFFF",
-        "entry_fg": "#2E2126",
-        "desc_fg": "#8A6B70",
-        "log_bg": "#FFFFFF",
-        "log_fg": "#2E2126",
-        "border": "#F0DDE0",
-        "link_fg": "#E85D75",
-        "warning_fg": "#C0392B",
-    },
-    5: {  # Sunny Amber -- warm off-white page, gold/amber accent
-        "bg": "#FFFDF7",
-        "fg": "#2B2620",
-        "entry_bg": "#FFFFFF",
-        "entry_fg": "#2B2620",
-        "desc_fg": "#7A7266",
-        "log_bg": "#FFFFFF",
-        "log_fg": "#2B2620",
-        "border": "#EDE3CE",
-        "link_fg": "#D97706",
-        "warning_fg": "#C0392B",
+        "accent_active": "#62D9F0",  # pressed/hover shade of link_fg, for filled Primary.TButton
+        "accent_fg": "#282A36",  # dark text on top of the bright cyan-filled button, matches bg
     },
 }
 
@@ -647,12 +574,6 @@ class App(tk.Tk):
         # UI language instead of its theme.
         saved_theme = prefs.get("theme")
         self.current_theme = saved_theme if saved_theme in ("light", "dark") else _detect_os_theme()
-
-        # EXPERIMENTAL -- which of the 5 candidate light palettes is active
-        # (see LIGHT_VARIANTS). Irrelevant once this collapses back down to
-        # one final light theme.
-        saved_variant = prefs.get("light_variant")
-        self.light_variant = saved_variant if saved_variant in LIGHT_VARIANTS else 1
 
         saved_lang = prefs.get("language")
         supported = {code for code, _flag, _name in i18n.LANGUAGES}
@@ -856,23 +777,6 @@ class App(tk.Tk):
         self.theme_toggle.pack(side="right")
         self.theme_toggle.bind("<Button-1>", lambda e: self.on_theme_toggle())
 
-        # EXPERIMENTAL -- numbered picker for the 5 candidate light
-        # palettes (see LIGHT_VARIANTS), shown only while in light mode
-        # (apply_theme shows/hides this whole frame). Delete this block,
-        # LIGHT_VARIANTS, and _theme_colors()'s branch once one variant is
-        # picked and it becomes the new plain THEMES["light"].
-        self._variant_picker_frame = ttk.Frame(icons_box)
-        self._variant_labels: dict[int, tk.Label] = {}
-        for n in range(1, 6):
-            lbl = tk.Label(
-                self._variant_picker_frame, text=str(n), cursor="hand2", font=("Segoe UI", 10, "bold"), width=2
-            )
-            lbl.pack(side="left")
-            lbl.bind("<Button-1>", lambda e, n=n: self._on_light_variant_click(n))
-            self._variant_labels[n] = lbl
-        # Left hidden until apply_theme() (called from _build_all right
-        # after this method returns) decides whether to show it.
-
         # Flag icon — click opens a menu ("burger list") of every supported
         # language. First launch defaults to the OS UI language (falling
         # back to English); once a language is picked, that choice is saved
@@ -930,33 +834,8 @@ class App(tk.Tk):
         _save_gui_prefs({**_load_gui_prefs(), "theme": self.current_theme})
         self.apply_theme(self.current_theme)
 
-    def _on_light_variant_click(self, n: int):
-        self.light_variant = n
-        _save_gui_prefs({**_load_gui_prefs(), "light_variant": n})
-        if self.current_theme == "light":
-            self.apply_theme("light")
-
-    def _refresh_variant_picker(self, c: dict):
-        """Highlights whichever number is the currently-active light
-        variant (filled in with that variant's own accent color) so it's
-        obvious which one is on screen while flipping between them."""
-        for n, lbl in self._variant_labels.items():
-            if n == self.light_variant:
-                lbl.configure(bg=c["link_fg"], fg="#FFFFFF")
-            else:
-                lbl.configure(bg=c["bg"], fg=c["desc_fg"])
-
     def _theme_colors(self, resolved: str | None = None) -> dict:
-        """The color dict actually in effect right now -- LIGHT_VARIANTS
-        keyed by self.light_variant for light mode, THEMES["dark"]
-        unchanged otherwise. Every place in this file that used to index
-        THEMES[self.current_theme] directly goes through this instead, so
-        the numbered light-palette experiment reaches every themed widget,
-        not just the ones apply_theme() touches directly."""
-        resolved = resolved or self.current_theme
-        if resolved == "light":
-            return LIGHT_VARIANTS[self.light_variant]
-        return THEMES[resolved]
+        return THEMES[resolved or self.current_theme]
 
     def apply_theme(self, resolved: str):
         self.current_theme = resolved
@@ -965,12 +844,6 @@ class App(tk.Tk):
         self.lang_toggle.configure(bg=c["bg"])
         self.author_link.configure(bg=c["bg"], fg=c["link_fg"])
         _set_titlebar_theme(self, resolved == "dark")
-        if hasattr(self, "_variant_picker_frame"):
-            if resolved == "light":
-                self._variant_picker_frame.pack(side="right", padx=(0, 6))
-                self._refresh_variant_picker(c)
-            else:
-                self._variant_picker_frame.pack_forget()
 
         self.configure(bg=c["bg"])
         self.style.configure(".", background=c["bg"], foreground=c["fg"])
@@ -979,19 +852,54 @@ class App(tk.Tk):
         self.style.configure("TLabelframe.Label", background=c["bg"], foreground=c["fg"])
         self.style.configure("TLabel", background=c["bg"], foreground=c["fg"])
         self.style.configure("TCheckbutton", background=c["bg"], foreground=c["fg"])
-        if resolved == "light":
-            # Explicit raised relief + a border color pulled from the
-            # palette -- clam's default button border is basically
-            # invisible against a light background otherwise (against
-            # dark it happens to read as a bevel already, which is
-            # exactly why dark mode's buttons already look fine and this
-            # branch is skipped there entirely).
-            self.style.configure(
-                "TButton", background=c["entry_bg"], foreground=c["fg"], bordercolor=c["border"],
-                borderwidth=1, relief="raised",
-            )
-        else:
-            self.style.configure("TButton", background=c["entry_bg"], foreground=c["fg"])
+
+        # Modern flat button treatment (same idea in both themes): a thin
+        # border instead of clam's default bevel, generous padding instead
+        # of the cramped default, and actual hover/pressed feedback (the
+        # border tints toward the accent color on hover; the fill darkens
+        # slightly on press) -- previously there was no hover/press
+        # feedback at all, which is a big part of why buttons read as
+        # inert/dated regardless of which colors they used.
+        self.style.configure(
+            "TButton",
+            background=c["entry_bg"],
+            foreground=c["fg"],
+            bordercolor=c["border"],
+            borderwidth=1,
+            relief="flat",
+            padding=(14, 8),
+        )
+        self.style.map(
+            "TButton",
+            background=[("pressed", c["border"])],
+            bordercolor=[("pressed", c["link_fg"]), ("active", c["link_fg"])],
+            foreground=[("disabled", c["desc_fg"])],
+        )
+        # Primary.TButton -- accent-filled, for the one main call-to-action
+        # per section (Save, Install, Download update). Everything else
+        # (Reload, Reset, Enable/Disable/Uninstall, Refresh, ...) stays on
+        # the neutral bordered style above so the one primary action per
+        # section actually stands out instead of every button competing.
+        self.style.configure(
+            "Primary.TButton",
+            background=c["link_fg"],
+            foreground=c["accent_fg"],
+            bordercolor=c["link_fg"],
+            borderwidth=1,
+            relief="flat",
+            padding=(14, 8),
+        )
+        self.style.map(
+            "Primary.TButton",
+            background=[
+                ("disabled", c["border"]),
+                ("pressed", c["accent_active"]),
+                ("active", c["accent_active"]),
+            ],
+            bordercolor=[("disabled", c["border"]), ("pressed", c["accent_active"]), ("active", c["accent_active"])],
+            foreground=[("disabled", c["desc_fg"])],
+        )
+
         self.style.configure(
             "TEntry", fieldbackground=c["entry_bg"], foreground=c["entry_fg"], insertcolor=c["fg"]
         )
@@ -1052,7 +960,11 @@ class App(tk.Tk):
         self.update_status_var = tk.StringVar(value=self.t("update_checking"))
         ttk.Label(row, textvariable=self.update_status_var).pack(side="left")
         self.update_download_button = ttk.Button(
-            row, text=self.t("btn_download_update"), command=self._open_latest_release, state="disabled"
+            row,
+            text=self.t("btn_download_update"),
+            command=self._open_latest_release,
+            state="disabled",
+            style="Primary.TButton",
         )
         self.update_download_button.pack(side="right", padx=(6, 0))
         ttk.Button(row, text=self.t("btn_check_updates"), command=self._check_for_updates_async).pack(side="right")
@@ -1146,9 +1058,13 @@ class App(tk.Tk):
 
         buttons_row = ttk.Frame(frame)
         buttons_row.pack(fill="x", pady=(8, 0))
-        ttk.Button(buttons_row, text=self.t("btn_install"), command=self.on_install, state=action_state).pack(
-            side="left", padx=(0, 6)
-        )
+        ttk.Button(
+            buttons_row,
+            text=self.t("btn_install"),
+            command=self.on_install,
+            state=action_state,
+            style="Primary.TButton",
+        ).pack(side="left", padx=(0, 6))
         ttk.Button(buttons_row, text=self.t("btn_enable"), command=self.on_enable, state=action_state).pack(
             side="left", padx=6
         )
@@ -1384,7 +1300,10 @@ class App(tk.Tk):
             self.reload_button.configure(style="ReloadDirty.TButton")
             self.reset_button.configure(style="ResetDirty.TButton")
         else:
-            self.save_button.configure(style="TButton")
+            # Save is the primary action of this section when there's
+            # nothing unsaved to flag -- Reload/Reset stay on the neutral
+            # style either way, they're not "the" action here.
+            self.save_button.configure(style="Primary.TButton")
             self.reload_button.configure(style="TButton")
             self.reset_button.configure(style="TButton")
 
