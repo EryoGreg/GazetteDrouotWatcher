@@ -35,6 +35,7 @@ import ast
 import ctypes
 import json
 import os
+import re
 import shutil
 import sys
 import threading
@@ -757,6 +758,11 @@ class App(tk.Tk):
         body.tag_configure("h", font=("Segoe UI", 11, "bold"), spacing1=6, spacing3=4)
         body.tag_configure("p", font=("Segoe UI", 10), spacing3=10)
         body.tag_configure("path", font=("Consolas", 9), foreground=c["desc_fg"], spacing3=10)
+        # "**...**" inside a paragraph marks the single sentence most worth
+        # a non-technical user actually noticing and remembering (right
+        # now: moving the app needs reopening it once from the new spot) --
+        # red + underlined instead of the normal paragraph style.
+        body.tag_configure("warn_inline", font=("Segoe UI", 10, "underline"), foreground=c["warning_fg"])
         # welcome_body is 8 "\n\n"-separated paragraphs (verified to match
         # this across every language) with welcome_h1..welcome_h8 as their
         # titles, kept as separate short keys rather than folding the
@@ -767,7 +773,10 @@ class App(tk.Tk):
         paragraphs = self.t("welcome_body").split("\n\n")
         for i, (title, paragraph) in enumerate(zip(titles, paragraphs), start=1):
             body.insert("end", title + "\n", "h")
-            body.insert("end", paragraph + "\n", "p")
+            for j, part in enumerate(re.split(r"\*\*(.+?)\*\*", paragraph, flags=re.DOTALL)):
+                if part:
+                    body.insert("end", part, "warn_inline" if j % 2 else "p")
+            body.insert("end", "\n", "p")
             if i == 5:
                 # welcome_h5 ("Your settings and files") — the actual path
                 # it's talking about, greyed out like other secondary/
