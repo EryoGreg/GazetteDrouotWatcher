@@ -51,7 +51,7 @@ RUBRIQUES = [
 # (re-)registers the Task Scheduler job — changing this number requires
 # clicking Install again once for the new interval to actually take effect.
 # ---------------------------------------------------------------------------
-POLL_INTERVAL_MINUTES = 15
+POLL_INTERVAL_MINUTES = 150
 
 
 # ---------------------------------------------------------------------------

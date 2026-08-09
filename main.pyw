@@ -795,6 +795,22 @@ class App(tk.Tk):
         outer = ttk.LabelFrame(self, text=self.t("section_settings"), padding=12)
         outer.pack(fill="both", expand=True, padx=12, pady=8)
 
+        # Save/Reload/Reset live in a fixed footer OUTSIDE the scrollable
+        # area (packed to the bottom first, so it always reserves its own
+        # space) rather than as the last item inside the scrolled content
+        # — previously they were only reachable by scrolling all the way
+        # down, and putting them at the *top* of the scrolled content
+        # instead wouldn't actually fix that: they'd still scroll out of
+        # view the moment you scroll down to edit anything below them.
+        buttons_row = ttk.Frame(outer)
+        buttons_row.pack(side="bottom", fill="x", pady=(8, 0))
+        ttk.Separator(outer).pack(side="bottom", fill="x", pady=(4, 0))
+        ttk.Button(buttons_row, text=self.t("btn_save"), command=self.on_save_settings).pack(side="left")
+        ttk.Button(buttons_row, text=self.t("btn_reload"), command=self.load_settings).pack(side="left", padx=6)
+        ttk.Button(buttons_row, text=self.t("btn_reset_defaults"), command=self.on_reset_defaults).pack(
+            side="right"
+        )
+
         # scrollable area, since the rubrique list can grow
         canvas = tk.Canvas(outer, highlightthickness=1)
         scrollbar = ttk.Scrollbar(outer, orient="vertical", command=canvas.yview)
@@ -837,16 +853,6 @@ class App(tk.Tk):
 
         self.rubriques_frame = ttk.Frame(self.scroll_frame)
         self.rubriques_frame.pack(fill="x")
-
-        ttk.Separator(self.scroll_frame).pack(fill="x", pady=10)
-
-        buttons_row = ttk.Frame(self.scroll_frame)
-        buttons_row.pack(fill="x", pady=(0, 8))
-        ttk.Button(buttons_row, text=self.t("btn_save"), command=self.on_save_settings).pack(side="left")
-        ttk.Button(buttons_row, text=self.t("btn_reload"), command=self.load_settings).pack(side="left", padx=6)
-        ttk.Button(buttons_row, text=self.t("btn_reset_defaults"), command=self.on_reset_defaults).pack(
-            side="right"
-        )
 
     def _add_field_row(self, parent, name, label, desc, kind):
         row = ttk.Frame(parent)
