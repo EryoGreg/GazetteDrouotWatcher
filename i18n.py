@@ -53,6 +53,17 @@ TRANSLATIONS = {
         "btn_disable": "Disable",
         "btn_uninstall": "Uninstall",
         "action_task_sync": "Update scheduled task",
+        "guide_admin_note": (
+            "Not running as Administrator — the scheduled task can't be kept in sync with Settings "
+            "changes without it."
+        ),
+        "btn_restart_admin": "Restart as Administrator",
+        "dlg_admin_recommended_title": "Run as Administrator?",
+        "dlg_admin_recommended_body": (
+            "This app isn't running as Administrator. Without that, actions here (Install, Enable, "
+            "Disable, Uninstall, and Settings changes) may fail to update the scheduled task.\n\n"
+            "Restart now as Administrator?"
+        ),
         "log_ok": "OK",
         "log_failed": "FAILED",
         "log_permission_hint": "Looks like a permissions problem.",
@@ -169,6 +180,18 @@ TRANSLATIONS = {
         "btn_disable": "Désactiver",
         "btn_uninstall": "Désinstaller",
         "action_task_sync": "Mettre à jour la tâche planifiée",
+        "guide_admin_note": (
+            "Ne s'exécute pas en tant qu'administrateur — la tâche planifiée ne peut pas être "
+            "synchronisée avec les modifications des paramètres sans cela."
+        ),
+        "btn_restart_admin": "Redémarrer en tant qu'administrateur",
+        "dlg_admin_recommended_title": "Exécuter en tant qu'administrateur ?",
+        "dlg_admin_recommended_body": (
+            "Cette application ne s'exécute pas en tant qu'administrateur. Sans cela, les actions "
+            "ici (Installer, Activer, Désactiver, Désinstaller, et les modifications des paramètres) "
+            "peuvent échouer à mettre à jour la tâche planifiée.\n\n"
+            "Redémarrer maintenant en tant qu'administrateur ?"
+        ),
         "log_ok": "OK",
         "log_failed": "ÉCHEC",
         "log_permission_hint": "Cela ressemble à un problème de permissions.",
@@ -285,6 +308,18 @@ TRANSLATIONS = {
         "btn_disable": "Desactivar",
         "btn_uninstall": "Desinstalar",
         "action_task_sync": "Actualizar tarea programada",
+        "guide_admin_note": (
+            "No se está ejecutando como administrador — la tarea programada no puede mantenerse "
+            "sincronizada con los cambios de configuración sin eso."
+        ),
+        "btn_restart_admin": "Reiniciar como administrador",
+        "dlg_admin_recommended_title": "¿Ejecutar como administrador?",
+        "dlg_admin_recommended_body": (
+            "Esta aplicación no se está ejecutando como administrador. Sin eso, las acciones aquí "
+            "(Instalar, Habilitar, Deshabilitar, Desinstalar y los cambios de configuración) pueden "
+            "no llegar a actualizar la tarea programada.\n\n"
+            "¿Reiniciar ahora como administrador?"
+        ),
         "log_ok": "OK",
         "log_failed": "FALLÓ",
         "log_permission_hint": "Parece un problema de permisos.",
@@ -401,6 +436,18 @@ TRANSLATIONS = {
         "btn_disable": "Deaktivieren",
         "btn_uninstall": "Deinstallieren",
         "action_task_sync": "Geplante Aufgabe aktualisieren",
+        "guide_admin_note": (
+            "Wird nicht als Administrator ausgeführt — ohne das kann die geplante Aufgabe nicht mit "
+            "Änderungen an den Einstellungen synchron gehalten werden."
+        ),
+        "btn_restart_admin": "Als Administrator neu starten",
+        "dlg_admin_recommended_title": "Als Administrator ausführen?",
+        "dlg_admin_recommended_body": (
+            "Diese App wird nicht als Administrator ausgeführt. Ohne das können Aktionen hier "
+            "(Installieren, Aktivieren, Deaktivieren, Deinstallieren und Änderungen an den "
+            "Einstellungen) die geplante Aufgabe möglicherweise nicht aktualisieren.\n\n"
+            "Jetzt als Administrator neu starten?"
+        ),
         "log_ok": "OK",
         "log_failed": "FEHLGESCHLAGEN",
         "log_permission_hint": "Sieht nach einem Berechtigungsproblem aus.",
@@ -517,6 +564,18 @@ TRANSLATIONS = {
         "btn_disable": "Desativar",
         "btn_uninstall": "Desinstalar",
         "action_task_sync": "Atualizar tarefa agendada",
+        "guide_admin_note": (
+            "Não está sendo executado como administrador — a tarefa agendada não pode ser mantida "
+            "sincronizada com as alterações de configurações sem isso."
+        ),
+        "btn_restart_admin": "Reiniciar como administrador",
+        "dlg_admin_recommended_title": "Executar como administrador?",
+        "dlg_admin_recommended_body": (
+            "Este aplicativo não está sendo executado como administrador. Sem isso, as ações aqui "
+            "(Instalar, Ativar, Desativar, Desinstalar e alterações de configurações) podem não "
+            "conseguir atualizar a tarefa agendada.\n\n"
+            "Reiniciar agora como administrador?"
+        ),
         "log_ok": "OK",
         "log_failed": "FALHOU",
         "log_permission_hint": "Parece um problema de permissões.",
@@ -633,6 +692,18 @@ TRANSLATIONS = {
         "btn_disable": "Отключить",
         "btn_uninstall": "Удалить",
         "action_task_sync": "Обновить запланированную задачу",
+        "guide_admin_note": (
+            "Приложение запущено не от имени администратора — без этого запланированная задача не "
+            "может синхронизироваться с изменениями настроек."
+        ),
+        "btn_restart_admin": "Перезапустить от имени администратора",
+        "dlg_admin_recommended_title": "Запустить от имени администратора?",
+        "dlg_admin_recommended_body": (
+            "Это приложение запущено не от имени администратора. Без этого действия здесь "
+            "(установка, включение, отключение, удаление и изменение настроек) могут не "
+            "обновить запланированную задачу.\n\n"
+            "Перезапустить сейчас от имени администратора?"
+        ),
         "log_ok": "OK",
         "log_failed": "ОШИБКА",
         "log_permission_hint": "Похоже на проблему с правами доступа.",
@@ -748,6 +819,13 @@ TRANSLATIONS = {
         "btn_disable": "禁用",
         "btn_uninstall": "卸载",
         "action_task_sync": "更新计划任务",
+        "guide_admin_note": "未以管理员身份运行——如此计划任务将无法与设置更改保持同步。",
+        "btn_restart_admin": "以管理员身份重新启动",
+        "dlg_admin_recommended_title": "以管理员身份运行？",
+        "dlg_admin_recommended_body": (
+            "此应用未以管理员身份运行。如此，这里的操作（安装、启用、禁用、卸载以及设置更改）"
+            "可能无法更新计划任务。\n\n是否立即以管理员身份重新启动？"
+        ),
         "log_ok": "成功",
         "log_failed": "失败",
         "log_permission_hint": "看起来是权限问题。",
@@ -861,6 +939,17 @@ TRANSLATIONS = {
         "btn_disable": "無効化",
         "btn_uninstall": "アンインストール",
         "action_task_sync": "スケジュールされたタスクを更新",
+        "guide_admin_note": (
+            "管理者として実行されていません——これがないと、スケジュールされたタスクを設定の変更"
+            "と同期させることができません。"
+        ),
+        "btn_restart_admin": "管理者として再起動",
+        "dlg_admin_recommended_title": "管理者として実行しますか？",
+        "dlg_admin_recommended_body": (
+            "このアプリは管理者として実行されていません。そのままでは、ここでの操作（インストー"
+            "ル、有効化、無効化、アンインストール、設定の変更）がスケジュールされたタスクに反映"
+            "されない場合があります。\n\n今すぐ管理者として再起動しますか？"
+        ),
         "log_ok": "OK",
         "log_failed": "失敗",
         "log_permission_hint": "権限の問題のようです。",
@@ -977,6 +1066,17 @@ TRANSLATIONS = {
         "btn_disable": "अक्षम करें",
         "btn_uninstall": "अनइंस्टॉल करें",
         "action_task_sync": "अनुसूचित कार्य अपडेट करें",
+        "guide_admin_note": (
+            "व्यवस्थापक के रूप में नहीं चल रहा है — इसके बिना अनुसूचित कार्य को सेटिंग्स में हुए "
+            "बदलावों के साथ समक्रमित नहीं रखा जा सकता।"
+        ),
+        "btn_restart_admin": "व्यवस्थापक के रूप में पुनः आरंभ करें",
+        "dlg_admin_recommended_title": "व्यवस्थापक के रूप में चलाएँ?",
+        "dlg_admin_recommended_body": (
+            "यह ऐप व्यवस्थापक के रूप में नहीं चल रहा है। इसके बिना, यहाँ की क्रियाएँ (इंस्टॉल करें, "
+            "सक्षम करें, अक्षम करें, अनइंस्टॉल करें, और सेटिंग्स में बदलाव) अनुसूचित कार्य को अपडेट "
+            "करने में विफल हो सकती हैं।\n\nक्या अभी व्यवस्थापक के रूप में पुनः आरंभ करें?"
+        ),
         "log_ok": "ठीक है",
         "log_failed": "विफल",
         "log_permission_hint": "यह अनुमति संबंधी समस्या लगती है।",
@@ -1091,6 +1191,17 @@ TRANSLATIONS = {
         "btn_disable": "تعطيل",
         "btn_uninstall": "إلغاء التثبيت",
         "action_task_sync": "تحديث المهمة المجدولة",
+        "guide_admin_note": (
+            "لا يعمل بصلاحيات المسؤول — دون ذلك، لا يمكن إبقاء المهمة المجدولة متزامنة مع "
+            "التغييرات في الإعدادات."
+        ),
+        "btn_restart_admin": "إعادة التشغيل كمسؤول",
+        "dlg_admin_recommended_title": "التشغيل كمسؤول؟",
+        "dlg_admin_recommended_body": (
+            "هذا التطبيق لا يعمل بصلاحيات المسؤول. دون ذلك، قد تفشل الإجراءات هنا (تثبيت، تفعيل، "
+            "تعطيل، إلغاء التثبيت، وتغييرات الإعدادات) في تحديث المهمة المجدولة.\n\n"
+            "هل تريد إعادة التشغيل الآن كمسؤول؟"
+        ),
         "log_ok": "تم",
         "log_failed": "فشل",
         "log_permission_hint": "يبدو أنها مشكلة في الأذونات.",

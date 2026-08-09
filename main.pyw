@@ -366,6 +366,15 @@ DIRTY_FG = "#282A36"
 FLASH_BG = "#50FA7B"  # Dracula Green — briefly shown right after Save
 FLASH_FG = "#282A36"
 
+# Same idea, applied to the Save/Reload/Reset buttons themselves rather than
+# individual rows — pastel tints (not the same saturated orange/green above,
+# which would visually read as "just saved" rather than "has unsaved
+# changes") so it's readable as a hint rather than a status flash.
+SAVE_BUTTON_DIRTY_BG = "#C6F6C6"  # light green
+RELOAD_BUTTON_DIRTY_BG = "#FFF3B0"  # light yellow
+RESET_BUTTON_DIRTY_BG = "#FFD9A0"  # light orange
+DIRTY_BUTTON_FG = "#282A36"
+
 
 def _set_titlebar_theme(root: tk.Tk, dark: bool):
     """The window's own titlebar (icon/text/min-max-close buttons) is drawn
@@ -470,6 +479,8 @@ def _save_gui_prefs(prefs: dict):
 class App(tk.Tk):
     def __init__(self):
         super().__init__()
+        # Shown at most once per launch — see _maybe_nag_for_admin.
+        self._admin_nag_shown = False
         self.minsize(640, 560)
         self.protocol("WM_DELETE_WINDOW", self.on_close)
         if ICON_PATH.exists():
@@ -540,9 +551,8 @@ class App(tk.Tk):
         Content here is a placeholder — the real step-by-step guide is
         meant to be written later; this just makes sure the mechanism is
         already in place and working."""
-        if not _load_gui_prefs().get("show_guide_on_start", True):
-            return
-        self._show_first_run_guide()
+        if _load_gui_prefs().get("show_guide_on_start", True):
+            self._show_first_run_guide()
 
     def _show_first_run_guide(self):
         c = THEMES[self.current_theme]
@@ -587,6 +597,26 @@ class App(tk.Tk):
         ttk.Checkbutton(bottom_row, text=self.t("welcome_dont_show_again"), variable=dont_show_var).pack(side="left")
         ttk.Button(bottom_row, text=self.t("welcome_dismiss"), command=dismiss).pack(side="right")
 
+        # Packed side="bottom" right after bottom_row (so it lands just
+        # above it, below the scrolled body) -- only shown when not already
+        # elevated, since without that the scheduled task can't actually be
+        # kept in sync with Settings changes (Install/Enable/Disable/
+        # Uninstall/Save all need it).
+        if not _is_admin():
+
+            def restart_admin():
+                _relaunch_as_admin()
+                self.on_close()
+
+            admin_row = ttk.Frame(frame)
+            admin_row.pack(side="bottom", fill="x", pady=(0, 8))
+            ttk.Label(admin_row, text=self.t("guide_admin_note"), wraplength=420, style="Desc.TLabel").pack(
+                side="left", fill="x", expand=True
+            )
+            ttk.Button(admin_row, text=self.t("btn_restart_admin"), command=restart_admin).pack(
+                side="right", padx=(8, 0)
+            )
+
         body = scrolledtext.ScrolledText(frame, wrap="word", font=("Segoe UI", 10))
         body.insert("1.0", self.t("welcome_body"))
         body.configure(state="disabled", bg=c["entry_bg"], fg=c["entry_fg"])
@@ -594,6 +624,23 @@ class App(tk.Tk):
 
         win.protocol("WM_DELETE_WINDOW", dismiss)
         win.wait_window()
+
+    def _maybe_nag_for_admin(self):
+        """Shown at most once per launch, the first time the user does
+        anything that could need the scheduled task updated (clicks any
+        Task/Settings action button, or edits a setting) while not running
+        elevated — nudging them to restart as Administrator now, rather
+        than have a later action (e.g. Save) silently fail to reach the
+        scheduler and only find out then. self._admin_nag_shown makes this
+        genuinely one-shot: once dismissed, it stays dismissed for the
+        rest of this session no matter how many more buttons get clicked
+        or fields get edited."""
+        if _is_admin() or self._admin_nag_shown:
+            return
+        self._admin_nag_shown = True
+        if messagebox.askyesno(self.t("dlg_admin_recommended_title"), self.t("dlg_admin_recommended_body")):
+            _relaunch_as_admin()
+            self.on_close()
 
     def _set_show_guide_on_start(self, value: bool):
         _save_gui_prefs({**_load_gui_prefs(), "show_guide_on_start": value})
@@ -826,6 +873,9 @@ class App(tk.Tk):
         self.status_var.set(text)
 
     def _run_action(self, action_key: str, fn):
+        self._maybe_nag_for_admin()
+        if not self.winfo_exists():
+            return  # nag offered a restart-as-admin relaunch and it was accepted
         action_name = self.t(action_key)
         self.log(self.t("log_action_dashes", action=action_name))
         ok, output = fn()
@@ -893,11 +943,16 @@ class App(tk.Tk):
         buttons_row = ttk.Frame(outer)
         buttons_row.pack(side="bottom", fill="x", pady=(8, 0))
         ttk.Separator(outer).pack(side="bottom", fill="x", pady=(4, 0))
-        ttk.Button(buttons_row, text=self.t("btn_save"), command=self.on_save_settings).pack(side="left")
-        ttk.Button(buttons_row, text=self.t("btn_reload"), command=self.load_settings).pack(side="left", padx=6)
-        ttk.Button(buttons_row, text=self.t("btn_reset_defaults"), command=self.on_reset_defaults).pack(
-            side="right"
-        )
+        self.save_button = ttk.Button(buttons_row, text=self.t("btn_save"), command=self.on_save_settings)
+        self.save_button.pack(side="left")
+        self.reload_button = ttk.Button(buttons_row, text=self.t("btn_reload"), command=self.on_reload_settings)
+        self.reload_button.pack(side="left", padx=6)
+        self.reset_button = ttk.Button(buttons_row, text=self.t("btn_reset_defaults"), command=self.on_reset_defaults)
+        self.reset_button.pack(side="right")
+        # Not calling _update_action_button_styles() here: SIMPLE_FIELDS
+        # rows don't exist yet at this point (they're added right below),
+        # and a freshly created ttk.Button already renders in the plain/
+        # clean "TButton" style by default anyway.
 
         # scrollable area, since the rubrique list can grow
         canvas = tk.Canvas(outer, highlightthickness=1)
@@ -970,14 +1025,53 @@ class App(tk.Tk):
         return baseline is not None and current != baseline
 
     def _on_field_dirty_check(self, name: str):
-        self._apply_row_style(self._row_styles[name], "dirty" if self._is_field_dirty(name) else "clean")
+        dirty = self._is_field_dirty(name)
+        self._apply_row_style(self._row_styles[name], "dirty" if dirty else "clean")
+        if dirty:
+            self._maybe_nag_for_admin()
+        if self.winfo_exists():
+            self._update_action_button_styles()
 
     def _is_rubrique_dirty(self, entry: dict) -> bool:
         current = (entry["key"].get(), entry["label"].get(), entry["url"].get())
         return entry["is_new"] or current != entry["baseline"]
 
     def _update_rubrique_row_style(self, entry: dict):
-        self._apply_row_style(entry["style"], "dirty" if self._is_rubrique_dirty(entry) else "clean")
+        dirty = self._is_rubrique_dirty(entry)
+        self._apply_row_style(entry["style"], "dirty" if dirty else "clean")
+        if dirty:
+            self._maybe_nag_for_admin()
+        if self.winfo_exists():
+            self._update_action_button_styles()
+
+    def _any_settings_dirty(self) -> bool:
+        if any(self._is_field_dirty(name) for name, *_ in SIMPLE_FIELDS):
+            return True
+        return any(self._is_rubrique_dirty(e) for e in self.rubrique_rows)
+
+    def _update_action_button_styles(self):
+        """Save/Reload/Reset get a light tint whenever there's at least one
+        unsaved change anywhere in Settings — the row-level orange/green
+        highlighting (_apply_row_style) says *what* changed; this says
+        *that* something did, visible even when the change scrolled out of
+        view. Reload and Reset are tinted too since both are also ways to
+        resolve that unsaved state (discard it, or reset to factory
+        defaults), not just Save."""
+        if not hasattr(self, "save_button"):
+            return  # called during _add_field_row before the footer buttons exist yet
+        if self._any_settings_dirty():
+            self.style.configure("SaveDirty.TButton", background=SAVE_BUTTON_DIRTY_BG, foreground=DIRTY_BUTTON_FG)
+            self.style.configure(
+                "ReloadDirty.TButton", background=RELOAD_BUTTON_DIRTY_BG, foreground=DIRTY_BUTTON_FG
+            )
+            self.style.configure("ResetDirty.TButton", background=RESET_BUTTON_DIRTY_BG, foreground=DIRTY_BUTTON_FG)
+            self.save_button.configure(style="SaveDirty.TButton")
+            self.reload_button.configure(style="ReloadDirty.TButton")
+            self.reset_button.configure(style="ResetDirty.TButton")
+        else:
+            self.save_button.configure(style="TButton")
+            self.reload_button.configure(style="TButton")
+            self.reset_button.configure(style="TButton")
 
     def _add_field_row(self, parent, name, label, desc, kind):
         row_style = f"F{name}.TFrame"
@@ -1053,6 +1147,9 @@ class App(tk.Tk):
         def remove():
             row.destroy()
             self.rubrique_rows.remove(entry)
+            self._maybe_nag_for_admin()
+            if self.winfo_exists():
+                self._update_action_button_styles()
 
         ttk.Button(row, text="✕", width=3, command=remove).pack(side="left")
 
@@ -1070,6 +1167,16 @@ class App(tk.Tk):
         for entry in self.rubrique_rows:
             entry["frame"].destroy()
         self.rubrique_rows = []
+
+    def on_reload_settings(self):
+        """The Reload button's command — distinct from load_settings()
+        itself, which is also called internally at startup and after every
+        Save/Reset, none of which should trigger the admin nag (only an
+        explicit user click should)."""
+        self._maybe_nag_for_admin()
+        if not self.winfo_exists():
+            return
+        self.load_settings()
 
     def load_settings(self):
         try:
@@ -1136,6 +1243,9 @@ class App(tk.Tk):
         return updates
 
     def on_save_settings(self):
+        self._maybe_nag_for_admin()
+        if not self.winfo_exists():
+            return
         updates = self._collect_updates()
         if updates is None:
             return
@@ -1193,6 +1303,9 @@ class App(tk.Tk):
         self.after(500, revert)
 
     def on_reset_defaults(self):
+        self._maybe_nag_for_admin()
+        if not self.winfo_exists():
+            return
         if not messagebox.askyesno(self.t("dlg_reset_confirm_title"), self.t("dlg_reset_confirm_body")):
             return
         updates = {name: repr(DEFAULTS[name]) for name, *_ in SIMPLE_FIELDS}
