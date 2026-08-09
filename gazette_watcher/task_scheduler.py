@@ -114,7 +114,13 @@ def install_task(exe_path: str, arguments: str, working_dir: str, interval_minut
 
     trigger = task_def.Triggers.Create(_TASK_TRIGGER_TIME)
     trigger.Id = "TimeTriggerRepeat"
-    start = datetime.datetime.now() - datetime.timedelta(seconds=5)
+    # 5 seconds wasn't enough of a margin -- StartBoundary's whole-second
+    # truncation plus how long RegisterTaskDefinition itself takes to
+    # complete could still land it in the future by the time the task is
+    # actually live, especially on a slower machine, so Task Scheduler
+    # never saw a "due" first run to catch up on. 90 seconds gives it
+    # comfortable room regardless of machine speed.
+    start = datetime.datetime.now() - datetime.timedelta(seconds=90)
     trigger.StartBoundary = start.strftime("%Y-%m-%dT%H:%M:%S")
     trigger.Repetition.Interval = f"PT{interval_minutes}M"
     trigger.Repetition.Duration = ""  # empty = repeat forever
