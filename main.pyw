@@ -91,7 +91,17 @@ def _refresh_exe_cache():
     a later scheduled run can tell whether that copy still exists (see
     _maybe_self_destruct_if_deleted). Source/dev-mode runs skip this
     entirely -- there's no portable exe to cache, and Task Scheduler
-    already points at a stable pythonw.exe + repo path in that case."""
+    already points at a stable pythonw.exe + repo path in that case.
+
+    Always copies unconditionally rather than skipping when the size looks
+    unchanged: a user updating by downloading a new build and overwriting
+    the old one at the exact same path is a completely ordinary way to
+    "update" a portable exe, and a same-size coincidence between two
+    genuinely different builds -- unlikely, but not impossible -- would
+    otherwise leave the scheduled task silently running old code from a
+    stale cache while the GUI (running the new build directly) reports
+    itself as up to date. A ~50MB copy once per launch is cheap enough
+    that there's no real reason to risk that for the sake of skipping it."""
     if not getattr(sys, "frozen", False):
         return
     try:
@@ -99,9 +109,7 @@ def _refresh_exe_cache():
         current = Path(sys.executable).resolve()
         if current == CACHED_EXE_PATH.resolve():
             return  # already running from the cache itself -- nothing to copy
-        current_size = current.stat().st_size
-        if not CACHED_EXE_PATH.exists() or CACHED_EXE_PATH.stat().st_size != current_size:
-            shutil.copyfile(current, CACHED_EXE_PATH)
+        shutil.copyfile(current, CACHED_EXE_PATH)
     except Exception:
         # Best-effort -- worst case the scheduled task keeps using whichever
         # cached copy (if any) already exists from a previous run.
