@@ -401,14 +401,19 @@ class App(tk.Tk):
 
         # Restore the last-used window position/size, but only if it'd
         # actually be reachable on this monitor setup right now (e.g. a
-        # second monitor it was on last time could be unplugged) — otherwise
-        # fall back to the default size and let Windows pick a position.
+        # second monitor it was on last time could be unplugged). Otherwise
+        # — which includes the very first launch ever, before any position
+        # has been saved — center on the primary monitor rather than
+        # letting Windows pick an arbitrary spot.
         restored = _saved_geometry_if_onscreen(prefs)
         if restored:
             x, y, w, h = restored
             self.geometry(f"{w}x{h}+{x}+{y}")
         else:
-            self.geometry("760x780")
+            w, h = 760, 780
+            x = max(0, (self.winfo_screenwidth() - w) // 2)
+            y = max(0, (self.winfo_screenheight() - h) // 2)
+            self.geometry(f"{w}x{h}+{x}+{y}")
 
         # First launch (no saved preference yet) follows the OS theme; once
         # the sun/moon icon is clicked, that explicit choice is remembered
