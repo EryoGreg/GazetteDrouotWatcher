@@ -377,6 +377,10 @@ THEMES = {
     # Dracula palette (https://draculatheme.com) — Background/Foreground for
     # the base, Selection for input fields (visually distinct from the main
     # background), Comment for secondary/description text.
+    #
+    # NOTE: dark mode is deliberately left untouched by the light-palette
+    # experiment below — every "if resolved == 'light'" branch this session
+    # added only ever reads from LIGHT_VARIANTS, never from this dict.
     "dark": {
         "bg": "#282A36",
         "fg": "#F8F8F2",
@@ -388,6 +392,82 @@ THEMES = {
         "border": "#6272A4",
         "link_fg": "#8BE9FD",  # Dracula Cyan
         "warning_fg": "#FF5555",  # Dracula Red
+    },
+}
+
+# ---------------------------------------------------------------------------
+# EXPERIMENTAL: 5 candidate replacements for light mode, picked with a
+# numbered 1-5 selector next to the theme toggle (only shown in light mode).
+# Reason for existing at all: the current light theme is flat white/grey
+# with no button depth (clam theme gives dark-mode buttons a visible bevel
+# against the dark background almost by accident; against light backgrounds
+# the same default border colors just disappear) — reads as dated rather
+# than deliberate. Each variant below pairs a tinted (not pure white/grey)
+# page background with a distinct accent hue, plus a matching border color
+# used for an explicit raised button relief (see apply_theme) to restore
+# that sense of depth. Once one is picked, this dict collapses back down to
+# a single THEMES["light"] and this whole selector goes away.
+# ---------------------------------------------------------------------------
+LIGHT_VARIANTS = {
+    1: {  # Indigo Slate -- cool neutral, modern SaaS-app look
+        "bg": "#F5F6FA",
+        "fg": "#1E2129",
+        "entry_bg": "#FFFFFF",
+        "entry_fg": "#1E2129",
+        "desc_fg": "#6B7280",
+        "log_bg": "#FFFFFF",
+        "log_fg": "#1E2129",
+        "border": "#D8DAE5",
+        "link_fg": "#4F46E5",
+        "warning_fg": "#DC2626",
+    },
+    2: {  # Warm Terracotta -- cream page, orange/clay accent
+        "bg": "#FBF7F0",
+        "fg": "#2E2A24",
+        "entry_bg": "#FFFFFF",
+        "entry_fg": "#2E2A24",
+        "desc_fg": "#8A7F6E",
+        "log_bg": "#FFFFFF",
+        "log_fg": "#2E2A24",
+        "border": "#E8DFD0",
+        "link_fg": "#E07A5F",
+        "warning_fg": "#C0392B",
+    },
+    3: {  # Mint Teal -- fresh, slightly cool-green
+        "bg": "#F2FBF9",
+        "fg": "#1B2E2B",
+        "entry_bg": "#FFFFFF",
+        "entry_fg": "#1B2E2B",
+        "desc_fg": "#5B7C77",
+        "log_bg": "#FFFFFF",
+        "log_fg": "#1B2E2B",
+        "border": "#D3EDE7",
+        "link_fg": "#0D9488",
+        "warning_fg": "#DC2626",
+    },
+    4: {  # Rose Coral -- warm pink-leaning, friendly/approachable
+        "bg": "#FDF4F5",
+        "fg": "#2E2126",
+        "entry_bg": "#FFFFFF",
+        "entry_fg": "#2E2126",
+        "desc_fg": "#8A6B70",
+        "log_bg": "#FFFFFF",
+        "log_fg": "#2E2126",
+        "border": "#F0DDE0",
+        "link_fg": "#E85D75",
+        "warning_fg": "#C0392B",
+    },
+    5: {  # Sunny Amber -- warm off-white page, gold/amber accent
+        "bg": "#FFFDF7",
+        "fg": "#2B2620",
+        "entry_bg": "#FFFFFF",
+        "entry_fg": "#2B2620",
+        "desc_fg": "#7A7266",
+        "log_bg": "#FFFFFF",
+        "log_fg": "#2B2620",
+        "border": "#EDE3CE",
+        "link_fg": "#D97706",
+        "warning_fg": "#C0392B",
     },
 }
 
@@ -568,6 +648,12 @@ class App(tk.Tk):
         saved_theme = prefs.get("theme")
         self.current_theme = saved_theme if saved_theme in ("light", "dark") else _detect_os_theme()
 
+        # EXPERIMENTAL -- which of the 5 candidate light palettes is active
+        # (see LIGHT_VARIANTS). Irrelevant once this collapses back down to
+        # one final light theme.
+        saved_variant = prefs.get("light_variant")
+        self.light_variant = saved_variant if saved_variant in LIGHT_VARIANTS else 1
+
         saved_lang = prefs.get("language")
         supported = {code for code, _flag, _name in i18n.LANGUAGES}
         self.lang = saved_lang if saved_lang in supported else i18n.detect_os_language()
@@ -591,7 +677,7 @@ class App(tk.Tk):
             self._show_first_run_guide()
 
     def _show_first_run_guide(self):
-        c = THEMES[self.current_theme]
+        c = self._theme_colors()
         win = tk.Toplevel(self)
         win.title(self.t("welcome_title"))
         # Center over the main window (standard modal-dialog behavior) —
@@ -770,6 +856,23 @@ class App(tk.Tk):
         self.theme_toggle.pack(side="right")
         self.theme_toggle.bind("<Button-1>", lambda e: self.on_theme_toggle())
 
+        # EXPERIMENTAL -- numbered picker for the 5 candidate light
+        # palettes (see LIGHT_VARIANTS), shown only while in light mode
+        # (apply_theme shows/hides this whole frame). Delete this block,
+        # LIGHT_VARIANTS, and _theme_colors()'s branch once one variant is
+        # picked and it becomes the new plain THEMES["light"].
+        self._variant_picker_frame = ttk.Frame(icons_box)
+        self._variant_labels: dict[int, tk.Label] = {}
+        for n in range(1, 6):
+            lbl = tk.Label(
+                self._variant_picker_frame, text=str(n), cursor="hand2", font=("Segoe UI", 10, "bold"), width=2
+            )
+            lbl.pack(side="left")
+            lbl.bind("<Button-1>", lambda e, n=n: self._on_light_variant_click(n))
+            self._variant_labels[n] = lbl
+        # Left hidden until apply_theme() (called from _build_all right
+        # after this method returns) decides whether to show it.
+
         # Flag icon — click opens a menu ("burger list") of every supported
         # language. First launch defaults to the OS UI language (falling
         # back to English); once a language is picked, that choice is saved
@@ -803,7 +906,7 @@ class App(tk.Tk):
         ttk.Separator(self).pack(fill="x")
 
     def _show_language_menu(self, event):
-        c = THEMES[self.current_theme]
+        c = self._theme_colors()
         menu = tk.Menu(self, tearoff=0, bg=c["entry_bg"], fg=c["fg"], activebackground=c["desc_fg"])
         for code, _flag, name in i18n.LANGUAGES:
             marker = "●  " if code == self.lang else "     "
@@ -827,13 +930,47 @@ class App(tk.Tk):
         _save_gui_prefs({**_load_gui_prefs(), "theme": self.current_theme})
         self.apply_theme(self.current_theme)
 
+    def _on_light_variant_click(self, n: int):
+        self.light_variant = n
+        _save_gui_prefs({**_load_gui_prefs(), "light_variant": n})
+        if self.current_theme == "light":
+            self.apply_theme("light")
+
+    def _refresh_variant_picker(self, c: dict):
+        """Highlights whichever number is the currently-active light
+        variant (filled in with that variant's own accent color) so it's
+        obvious which one is on screen while flipping between them."""
+        for n, lbl in self._variant_labels.items():
+            if n == self.light_variant:
+                lbl.configure(bg=c["link_fg"], fg="#FFFFFF")
+            else:
+                lbl.configure(bg=c["bg"], fg=c["desc_fg"])
+
+    def _theme_colors(self, resolved: str | None = None) -> dict:
+        """The color dict actually in effect right now -- LIGHT_VARIANTS
+        keyed by self.light_variant for light mode, THEMES["dark"]
+        unchanged otherwise. Every place in this file that used to index
+        THEMES[self.current_theme] directly goes through this instead, so
+        the numbered light-palette experiment reaches every themed widget,
+        not just the ones apply_theme() touches directly."""
+        resolved = resolved or self.current_theme
+        if resolved == "light":
+            return LIGHT_VARIANTS[self.light_variant]
+        return THEMES[resolved]
+
     def apply_theme(self, resolved: str):
         self.current_theme = resolved
-        c = THEMES[resolved]
+        c = self._theme_colors(resolved)
         self.theme_toggle.configure(text="☀" if resolved == "light" else "🌙", bg=c["bg"], fg=c["fg"])
         self.lang_toggle.configure(bg=c["bg"])
         self.author_link.configure(bg=c["bg"], fg=c["link_fg"])
         _set_titlebar_theme(self, resolved == "dark")
+        if hasattr(self, "_variant_picker_frame"):
+            if resolved == "light":
+                self._variant_picker_frame.pack(side="right", padx=(0, 6))
+                self._refresh_variant_picker(c)
+            else:
+                self._variant_picker_frame.pack_forget()
 
         self.configure(bg=c["bg"])
         self.style.configure(".", background=c["bg"], foreground=c["fg"])
@@ -842,7 +979,19 @@ class App(tk.Tk):
         self.style.configure("TLabelframe.Label", background=c["bg"], foreground=c["fg"])
         self.style.configure("TLabel", background=c["bg"], foreground=c["fg"])
         self.style.configure("TCheckbutton", background=c["bg"], foreground=c["fg"])
-        self.style.configure("TButton", background=c["entry_bg"], foreground=c["fg"])
+        if resolved == "light":
+            # Explicit raised relief + a border color pulled from the
+            # palette -- clam's default button border is basically
+            # invisible against a light background otherwise (against
+            # dark it happens to read as a bevel already, which is
+            # exactly why dark mode's buttons already look fine and this
+            # branch is skipped there entirely).
+            self.style.configure(
+                "TButton", background=c["entry_bg"], foreground=c["fg"], bordercolor=c["border"],
+                borderwidth=1, relief="raised",
+            )
+        else:
+            self.style.configure("TButton", background=c["entry_bg"], foreground=c["fg"])
         self.style.configure(
             "TEntry", fieldbackground=c["entry_bg"], foreground=c["entry_fg"], insertcolor=c["fg"]
         )
@@ -1180,7 +1329,7 @@ class App(tk.Tk):
         elif state == "flash":
             bg, fg = FLASH_BG, FLASH_FG
         else:
-            c = THEMES[self.current_theme]
+            c = self._theme_colors()
             bg, fg = c["bg"], c["fg"]
         self.style.configure(style_names["row"], background=bg)
         if "label" in style_names:
