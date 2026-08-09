@@ -324,6 +324,19 @@ def _virtual_screen_bounds() -> tuple[int, int, int, int]:
     return gsm(SM_XVIRTUALSCREEN), gsm(SM_YVIRTUALSCREEN), gsm(SM_CXVIRTUALSCREEN), gsm(SM_CYVIRTUALSCREEN)
 
 
+def _primary_screen_size() -> tuple[int, int]:
+    """(width, height) of specifically the PRIMARY monitor — the one
+    Windows treats as "main" in Display Settings, wherever the taskbar
+    lives, regardless of its actual resolution (most screens aren't the
+    2560x1440 this was developed on). Deliberately not using Tk's own
+    winfo_screenwidth/height here — those aren't consistently reliable
+    across different multi-monitor/DPI setups, whereas asking Windows
+    itself via GetSystemMetrics always reflects the real primary monitor."""
+    gsm = ctypes.windll.user32.GetSystemMetrics
+    SM_CXSCREEN, SM_CYSCREEN = 0, 1
+    return gsm(SM_CXSCREEN), gsm(SM_CYSCREEN)
+
+
 def _saved_geometry_if_onscreen(prefs: dict) -> tuple[int, int, int, int] | None:
     """Returns the saved (x, y, w, h) only if enough of the titlebar would
     actually be visible/reachable on the CURRENT monitor setup — e.g. a
@@ -411,8 +424,9 @@ class App(tk.Tk):
             self.geometry(f"{w}x{h}+{x}+{y}")
         else:
             w, h = 760, 780
-            x = max(0, (self.winfo_screenwidth() - w) // 2)
-            y = max(0, (self.winfo_screenheight() - h) // 2)
+            sw, sh = _primary_screen_size()
+            x = max(0, (sw - w) // 2)
+            y = max(0, (sh - h) // 2)
             self.geometry(f"{w}x{h}+{x}+{y}")
 
         # First launch (no saved preference yet) follows the OS theme; once
@@ -449,7 +463,15 @@ class App(tk.Tk):
         c = THEMES[self.current_theme]
         win = tk.Toplevel(self)
         win.title(self.t("welcome_title"))
-        win.geometry("520x420")
+        # Center over the main window (standard modal-dialog behavior) —
+        # by this point the main window is itself already centered on the
+        # primary monitor, so this lands near screen-center too.
+        w, h = 520, 420
+        px, py = self.winfo_x(), self.winfo_y()
+        pw, ph = self.winfo_width(), self.winfo_height()
+        x = px + max(0, (pw - w) // 2)
+        y = py + max(0, (ph - h) // 2)
+        win.geometry(f"{w}x{h}+{x}+{y}")
         win.configure(bg=c["bg"])
         win.transient(self)
         win.grab_set()
