@@ -35,6 +35,7 @@ import ast
 import ctypes
 import json
 import os
+import shutil
 import sys
 import threading
 import tkinter as tk
@@ -70,6 +71,78 @@ ICON_PATH = PROJECT_DIR / "icon.ico"
 # this one folder regardless of where the exe itself sits.
 APPDATA_DIR = Path(os.environ["LOCALAPPDATA"]) / "GazetteDrouotWatcher"
 APPDATA_DIR.mkdir(parents=True, exist_ok=True)
+
+# A cached copy of the exe itself, and a record of where the *visible* copy
+# (wherever the user actually keeps/runs it from) last was -- see
+# _refresh_exe_cache() and _maybe_self_destruct_if_deleted() below. Task
+# Scheduler is pointed at CACHED_EXE_PATH (stable) rather than sys.executable
+# (moves whenever the user moves their copy), so relocating the visible exe
+# — e.g. Downloads -> Documents — doesn't silently break the scheduled task.
+CACHED_EXE_PATH = APPDATA_DIR / "GazetteDrouotWatcher.exe"
+LAST_KNOWN_EXE_PATH_FILE = APPDATA_DIR / "last_known_exe_path.txt"
+
+
+def _refresh_exe_cache():
+    """Called once at GUI startup, and again right before every
+    install_task() call (Install, or a Save/Reset that re-syncs an already-
+    installed task) -- keeps CACHED_EXE_PATH up to date with whatever's
+    actually running, and records the visible copy's current real path so
+    a later scheduled run can tell whether that copy still exists (see
+    _maybe_self_destruct_if_deleted). Source/dev-mode runs skip this
+    entirely -- there's no portable exe to cache, and Task Scheduler
+    already points at a stable pythonw.exe + repo path in that case."""
+    if not getattr(sys, "frozen", False):
+        return
+    try:
+        LAST_KNOWN_EXE_PATH_FILE.write_text(sys.executable, encoding="utf-8")
+        current = Path(sys.executable).resolve()
+        if current == CACHED_EXE_PATH.resolve():
+            return  # already running from the cache itself -- nothing to copy
+        current_size = current.stat().st_size
+        if not CACHED_EXE_PATH.exists() or CACHED_EXE_PATH.stat().st_size != current_size:
+            shutil.copyfile(current, CACHED_EXE_PATH)
+    except Exception:
+        # Best-effort -- worst case the scheduled task keeps using whichever
+        # cached copy (if any) already exists from a previous run.
+        pass
+
+
+def _maybe_self_destruct_if_deleted() -> bool:
+    """Only meaningful for a frozen scheduled --watch run. Returns True if
+    this process just uninstalled the scheduled task and wiped APPDATA_DIR
+    (the caller should stop, not run a normal check).
+
+    LAST_KNOWN_EXE_PATH_FILE records where the *visible* copy of the app
+    was the last time the GUI opened. If nothing exists there anymore, the
+    most likely explanation is the user deleted it (e.g. dragged it to the
+    Recycle Bin) without first clicking Uninstall -- so this cleans up
+    after itself instead of running forever as an invisible background
+    process with no way left to manage or stop it.
+
+    A *moved* (not deleted) file looks identical from here: opening the
+    app again from its new location re-writes the marker before this next
+    runs, so the fix is the same either way -- open it once. That
+    trade-off (move it, then reopen it before the next scheduled check, or
+    it's treated as deleted) is explained in the first-run guide."""
+    if not getattr(sys, "frozen", False):
+        return False
+    try:
+        if not LAST_KNOWN_EXE_PATH_FILE.exists():
+            return False  # GUI has never run yet -- nothing to check against
+        last_known = LAST_KNOWN_EXE_PATH_FILE.read_text(encoding="utf-8").strip()
+        if last_known and Path(last_known).exists():
+            return False  # still there -- normal run
+        try:
+            ts.uninstall_task()
+        except Exception:
+            pass  # best-effort -- still proceed to wipe the folder either way
+        shutil.rmtree(APPDATA_DIR, ignore_errors=True)
+        return True
+    except Exception:
+        # Fail open: any unexpected error here means "don't know", and a
+        # normal check running one extra time is a far smaller problem
+        # than wiping a folder on a false positive.
+        return False
 
 CONFIG_PATH = APPDATA_DIR / "config.py"
 
@@ -261,10 +334,11 @@ def patch_config(source: str, updates: dict[str, str]) -> str:
 # ---------------------------------------------------------------------------
 def _resolve_scheduled_action() -> tuple[str, str, str]:
     """(exe_path, arguments, working_dir) for what Task Scheduler should run.
-    Frozen exe: itself, with --watch. Running from source: pythonw.exe
-    running this file, with --watch."""
+    Frozen exe: the cached copy in APPDATA_DIR (not sys.executable directly
+    -- see CACHED_EXE_PATH/_refresh_exe_cache above), with --watch. Running
+    from source: pythonw.exe running this file, with --watch."""
     if getattr(sys, "frozen", False):
-        return sys.executable, "--watch", str(PROJECT_DIR)
+        return str(CACHED_EXE_PATH), "--watch", str(APPDATA_DIR)
     pythonw = sys.executable
     if pythonw.lower().endswith("python.exe"):
         candidate = pythonw[: -len("python.exe")] + "pythonw.exe"
@@ -297,6 +371,11 @@ def _do_install() -> tuple[bool, str]:
         interval = int(config.POLL_INTERVAL_MINUTES)
     except Exception as e:
         return False, f"__CONFIG_UNREADABLE__{e}"
+    # Re-sync the cache right before pointing Task Scheduler at it, not just
+    # once at GUI startup -- guarantees CACHED_EXE_PATH actually exists and
+    # matches the running exe at the moment it's needed, regardless of how
+    # long the GUI's been open or whether the cache was cleared some other way.
+    _refresh_exe_cache()
     exe_path, arguments, working_dir = _resolve_scheduled_action()
     return _call_task_scheduler(ts.install_task, exe_path, arguments, working_dir, interval)
 
@@ -1641,9 +1720,13 @@ class App(tk.Tk):
 if __name__ == "__main__":
     if "--watch" in sys.argv:
         # This is what Task Scheduler actually calls — run one check and exit,
-        # no GUI. See gazette_watcher/watcher.py for what a "check" does.
-        from gazette_watcher import watcher
+        # no GUI. See gazette_watcher/watcher.py for what a "check" does --
+        # unless the visible copy of the app is gone, in which case this
+        # cleans up after itself instead (see _maybe_self_destruct_if_deleted).
+        if not _maybe_self_destruct_if_deleted():
+            from gazette_watcher import watcher
 
-        watcher.run()
+            watcher.run()
     else:
+        _refresh_exe_cache()
         App().mainloop()
