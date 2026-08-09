@@ -1098,9 +1098,18 @@ class App(tk.Tk):
 
     def refresh_status(self):
         code = _get_task_status_code()
-        text = {"not_installed": self.t("status_not_installed"), "ready": self.t("status_ready"), "disabled": self.t("status_disabled")}.get(
-            code, code
-        )
+        # "queued"/"running"/"unknown" are real states get_task_status() can
+        # return (a scheduled run can be caught mid-flight) that this map
+        # used to be missing entirely -- falling through to the raw,
+        # untranslated English status string via dict.get's default.
+        text = {
+            "not_installed": self.t("status_not_installed"),
+            "ready": self.t("status_ready"),
+            "disabled": self.t("status_disabled"),
+            "queued": self.t("status_queued"),
+            "running": self.t("status_running"),
+            "unknown": self.t("status_unknown"),
+        }.get(code, code)
         self.status_var.set(text)
 
     def _open_log_file(self):
