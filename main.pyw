@@ -662,6 +662,7 @@ class App(tk.Tk):
         body = scrolledtext.ScrolledText(frame, wrap="word", font=("Segoe UI", 10))
         body.tag_configure("h", font=("Segoe UI", 11, "bold"), spacing1=6, spacing3=4)
         body.tag_configure("p", font=("Segoe UI", 10), spacing3=10)
+        body.tag_configure("path", font=("Consolas", 9), foreground=c["desc_fg"], spacing3=10)
         # welcome_body is 8 "\n\n"-separated paragraphs (verified to match
         # this across every language) with welcome_h1..welcome_h8 as their
         # titles, kept as separate short keys rather than folding the
@@ -670,9 +671,15 @@ class App(tk.Tk):
         # languages every time a title needs a tweak.
         titles = [self.t(f"welcome_h{i}") for i in range(1, 9)]
         paragraphs = self.t("welcome_body").split("\n\n")
-        for title, paragraph in zip(titles, paragraphs):
+        for i, (title, paragraph) in enumerate(zip(titles, paragraphs), start=1):
             body.insert("end", title + "\n", "h")
-            body.insert("end", paragraph + "\n\n", "p")
+            body.insert("end", paragraph + "\n", "p")
+            if i == 5:
+                # welcome_h5 ("Your settings and files") — the actual path
+                # it's talking about, greyed out like other secondary/
+                # supporting text rather than translated prose.
+                body.insert("end", str(APPDATA_DIR) + "\n", "path")
+            body.insert("end", "\n")
         body.configure(state="disabled", bg=c["entry_bg"], fg=c["entry_fg"])
         body.pack(fill="both", expand=True)
 
