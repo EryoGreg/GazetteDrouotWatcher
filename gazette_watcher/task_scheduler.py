@@ -20,6 +20,7 @@ stand-in.
 
 import datetime
 import functools
+import os
 
 import win32com.client
 
@@ -85,14 +86,23 @@ def install_task(exe_path: str, arguments: str, working_dir: str, interval_minut
     arguments` once right away, then every interval_minutes indefinitely
     after that — only while the installing user is logged in.
 
-    A time trigger with StartBoundary set a few seconds in the past (so
-    it's already "due" the instant registration completes) rather than a
-    logon trigger — a logon trigger only fires on the *next* logon, so
-    installing (or a Settings Save that re-registers this with a changed
-    interval) wouldn't actually run anything until the next time the user
-    signed in, which reads as the app doing nothing right after you set
-    it up. This runs immediately instead, then keeps repeating exactly
-    like the logon trigger did.
+    A time trigger with StartBoundary set in the past (so it's already
+    "due" by the time registration completes) rather than a logon trigger
+    — a logon trigger only fires on the *next* logon, so installing (or a
+    Settings Save that re-registers this with a changed interval)
+    wouldn't actually run anything until the next time the user signed
+    in, which reads as the app doing nothing right after you set it up.
+    This runs once immediately instead, then keeps repeating exactly like
+    the logon trigger did.
+
+    "Immediately" here doesn't rely on Task Scheduler's own due-trigger
+    polling to notice a just-registered task fast enough (its engine only
+    sweeps for due triggers periodically, and testing showed a task could
+    still be sitting at "never run" a couple of minutes after install) —
+    the explicit task.Run(None) below kicks off that first run directly
+    and deterministically, independent of any of that polling timing.
+    The past StartBoundary is kept anyway so the *ongoing* repetition
+    pattern's reference point is unambiguous.
 
     Passing userId="" to RegisterTaskDefinition below resolves to the
     calling (installing) user, so this always runs as that one specific
@@ -105,6 +115,11 @@ def install_task(exe_path: str, arguments: str, working_dir: str, interval_minut
     task_def = scheduler.NewTask(0)
 
     task_def.RegistrationInfo.Description = "Gazette Drouot Watcher — periodic check for new articles"
+    # Neither of these gets auto-filled by RegisterTaskDefinition the way
+    # the Task Scheduler UI would fill them in for a task created there
+    # directly -- left unset, both show up blank in Task Scheduler.
+    task_def.RegistrationInfo.Author = f"{os.environ.get('USERDOMAIN', '')}\\{os.environ.get('USERNAME', '')}"
+    task_def.RegistrationInfo.Date = datetime.datetime.now().strftime("%Y-%m-%dT%H:%M:%S")
     task_def.Settings.Enabled = True
     task_def.Settings.StartWhenAvailable = True
     task_def.Settings.DisallowStartIfOnBatteries = False
@@ -133,9 +148,17 @@ def install_task(exe_path: str, arguments: str, working_dir: str, interval_minut
 
     task_def.Principal.LogonType = _TASK_LOGON_INTERACTIVE_TOKEN
 
-    root_folder.RegisterTaskDefinition(
+    registered_task = root_folder.RegisterTaskDefinition(
         TASK_NAME, task_def, _TASK_CREATE_OR_UPDATE, "", "", _TASK_LOGON_INTERACTIVE_TOKEN
     )
+    try:
+        registered_task.Run(None)
+    except Exception:
+        # The task is validly registered either way and will still run on
+        # its own schedule -- this is just a best-effort kick for instant
+        # feedback, not something that should make install_task() itself
+        # report failure.
+        pass
 
 
 @_translate_errors
