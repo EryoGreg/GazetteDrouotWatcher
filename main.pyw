@@ -614,14 +614,20 @@ class App(tk.Tk):
         # kept in sync with Settings changes (Install/Enable/Disable/
         # Uninstall/Save all need it).
         if not _is_admin():
+            # Stacked (label above, button below) rather than side-by-side —
+            # side-by-side meant the button's own width ate into the space
+            # left for the label, and widening the whole dialog to fit both
+            # on one line never quite kept up with translations of either.
+            # Stacked, the button always gets its full natural width
+            # regardless of how long the label's text ends up being.
             admin_row = ttk.Frame(frame)
             admin_row.pack(side="bottom", fill="x", pady=(0, 8))
             ttk.Label(admin_row, text=self.t("guide_admin_note"), wraplength=600, style="Desc.TLabel").pack(
-                side="left", fill="x", expand=True
+                anchor="w", fill="x"
             )
-            ttk.Button(admin_row, text=self.t("btn_restart_admin"), command=self._on_restart_as_admin_click).pack(
-                side="right", padx=(8, 0)
-            )
+            ttk.Button(
+                admin_row, text=self.t("btn_restart_admin"), command=self._on_restart_as_admin_click
+            ).pack(anchor="e", pady=(6, 0))
 
         body = scrolledtext.ScrolledText(frame, wrap="word", font=("Segoe UI", 10))
         body.insert("1.0", self.t("welcome_body"))
