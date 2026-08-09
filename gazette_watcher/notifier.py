@@ -27,6 +27,12 @@ from . import config
 
 log = logging.getLogger("gazette_watcher")
 
+# win11toast defaults to app_id="Python" (its own hardcoded default), which
+# is what shows as the toast's header/sender name for an unpackaged script —
+# there's no real Windows app registration involved, so any string works;
+# passing this one explicitly on every notify() call below is the whole fix.
+APP_ID = "Gazette Drouot Watcher"
+
 # Where downloaded thumbnail images are cached (see _local_image_path).
 _IMAGE_CACHE_DIR = Path(tempfile.gettempdir()) / "gazette_watcher_images"
 
@@ -70,7 +76,7 @@ def _notify_article(article: dict):
     if article.get("excerpt"):
         body += f"\n{article['excerpt']}"
 
-    kwargs = {"on_click": article["url"]}
+    kwargs = {"on_click": article["url"], "app_id": APP_ID}
     if article.get("image"):
         local_image = _local_image_path(article["image"])
         if local_image:
@@ -119,6 +125,7 @@ def notify_new_articles(new_articles: list[dict], rubrique_label: str, listing_u
             f"{len(rest)} more new posts — {rubrique_label}",
             "Click to view the listing",
             on_click=listing_url,
+            app_id=APP_ID,
         )
         log.info("notified summary: %d more articles on %s", len(rest), rubrique_label)
 
@@ -133,6 +140,7 @@ def notify_first_run_seeded(rubrique_label: str, count: int):
             "Gazette Drouot Watcher — set up",
             f"Now tracking {rubrique_label} ({count} articles seeded as baseline). "
             "You'll be notified about new ones from here.",
+            app_id=APP_ID,
         )
     except Exception:
         log.exception("failed to show first-run-seeded toast for %s", rubrique_label)
@@ -148,7 +156,7 @@ def notify_cloudflare_blocked(blocked_rubriques: list[str]):
         "If not, check logs\\watcher.log for details."
     )
     try:
-        notify("Gazette Drouot Watcher — blocked by Cloudflare", body)
+        notify("Gazette Drouot Watcher — blocked by Cloudflare", body, app_id=APP_ID)
     except Exception:
         log.exception("failed to show Cloudflare-block alert toast")
 
@@ -165,6 +173,6 @@ def notify_site_structure_changed(affected_rubriques: list[str]):
         "Details are in logs\\watcher.log."
     )
     try:
-        notify("Gazette Drouot Watcher — needs an update", body)
+        notify("Gazette Drouot Watcher — needs an update", body, app_id=APP_ID)
     except Exception:
         log.exception("failed to show site-structure-changed alert toast")
