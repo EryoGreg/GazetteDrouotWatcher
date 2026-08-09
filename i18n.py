@@ -175,8 +175,8 @@ TRANSLATIONS = {
         "btn_uninstall": "Désinstaller",
         "action_task_sync": "Mettre à jour la tâche planifiée",
         "guide_admin_note": (
-            "Ne s'exécute pas en tant qu'administrateur — la tâche planifiée ne peut pas être "
-            "synchronisée avec les modifications des paramètres sans cela."
+            "L'application n'est pas lancée en tant qu'administrateur — tant que ce n'est pas le cas, "
+            "la tâche planifiée ne peut pas être synchronisée avec les modifications des paramètres."
         ),
         "btn_restart_admin": "Redémarrer en tant qu'administrateur",
         "log_ok": "OK",

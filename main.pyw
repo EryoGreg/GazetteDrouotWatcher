@@ -317,14 +317,23 @@ def _is_admin() -> bool:
         return False
 
 
-def _relaunch_as_admin():
+def _relaunch_as_admin() -> bool:
     """Re-runs this same GUI (script or frozen exe) elevated via the
-    standard Windows UAC prompt."""
+    standard Windows UAC prompt. Returns whether an elevated process
+    actually got launched -- ShellExecuteW blocks until the UAC prompt is
+    resolved, then returns a real instance handle (> 32) on success, or
+    one of a handful of small SE_ERR_* codes (<= 32, e.g. 5 for
+    "access denied") if the user clicked No/Cancel on it. Callers use
+    this to decide whether to close the current window: closing it when
+    nothing actually launched to replace it would just lose the user's
+    open session for nothing."""
     if getattr(sys, "frozen", False):
         exe, params = sys.executable, ""
     else:
         exe, params = sys.executable, f'"{Path(__file__).resolve()}"'
-    ctypes.windll.shell32.ShellExecuteW(None, "runas", exe, params, str(PROJECT_DIR), 1)
+    ctypes.windll.shell32.ShellExecuteW.restype = ctypes.c_void_p
+    result = ctypes.windll.shell32.ShellExecuteW(None, "runas", exe, params, str(PROJECT_DIR), 1)
+    return (result or 0) > 32
 
 
 # ---------------------------------------------------------------------------
@@ -605,17 +614,12 @@ class App(tk.Tk):
         # kept in sync with Settings changes (Install/Enable/Disable/
         # Uninstall/Save all need it).
         if not _is_admin():
-
-            def restart_admin():
-                _relaunch_as_admin()
-                self.on_close()
-
             admin_row = ttk.Frame(frame)
             admin_row.pack(side="bottom", fill="x", pady=(0, 8))
             ttk.Label(admin_row, text=self.t("guide_admin_note"), wraplength=420, style="Desc.TLabel").pack(
                 side="left", fill="x", expand=True
             )
-            ttk.Button(admin_row, text=self.t("btn_restart_admin"), command=restart_admin).pack(
+            ttk.Button(admin_row, text=self.t("btn_restart_admin"), command=self._on_restart_as_admin_click).pack(
                 side="right", padx=(8, 0)
             )
 
@@ -852,7 +856,7 @@ class App(tk.Tk):
             note2.pack(side="left", fill="x", expand=True)
             self._desc_labels.append(note2)
             ttk.Button(
-                admin_row, text=self.t("btn_restart_admin"), command=lambda: (_relaunch_as_admin(), self.on_close())
+                admin_row, text=self.t("btn_restart_admin"), command=self._on_restart_as_admin_click
             ).pack(side="right", padx=(8, 0))
 
         buttons_row = ttk.Frame(frame)
@@ -870,6 +874,10 @@ class App(tk.Tk):
             side="left", padx=6
         )
 
+    def _on_restart_as_admin_click(self):
+        if _relaunch_as_admin():
+            self.on_close()
+
     def refresh_status(self):
         code = _get_task_status_code()
         text = {"not_installed": self.t("status_not_installed"), "ready": self.t("status_ready"), "disabled": self.t("status_disabled")}.get(
@@ -885,8 +893,8 @@ class App(tk.Tk):
         if not ok and output == _PERMISSION_DENIED_SENTINEL and not _is_admin():
             self.log(self.t("log_permission_hint"))
             if messagebox.askyesno(action_name, self.t("dlg_admin_needed_body", action=action_name)):
-                _relaunch_as_admin()
-                self.on_close()
+                if _relaunch_as_admin():
+                    self.on_close()
             return
 
         # Translate the internal sentinels into something a user should
