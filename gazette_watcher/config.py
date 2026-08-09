@@ -105,7 +105,7 @@ NOTIF_GAP_SECONDS = 7
 # of "something's wrong" alert toast again — so a multi-hour outage doesn't
 # spam a toast every POLL_INTERVAL_MINUTES.
 # ---------------------------------------------------------------------------
-ALERT_COOLDOWN_HOURS = 2
+ALERT_COOLDOWN_HOURS = 2.0
 
 
 # ---------------------------------------------------------------------------
@@ -123,5 +123,5 @@ ALERT_COOLDOWN_HOURS = 2
 #     Playwright only knows how to drive the browsers listed above.
 # ---------------------------------------------------------------------------
 HEADLESS = True
-BROWSER_CHANNEL = 'msedge'
+BROWSER_CHANNEL = 'chrome'
 WINDOW_ARGS = []

@@ -42,10 +42,6 @@ import winreg
 from pathlib import Path
 from tkinter import messagebox, scrolledtext, ttk
 
-import flags
-import i18n
-from gazette_watcher import task_scheduler as ts
-
 # When packaged into a standalone .exe (PyInstaller), __file__ points into a
 # temporary extraction folder, not where the .exe actually sits — use the
 # .exe's own location instead in that case. Either way, this file/exe is
@@ -60,6 +56,37 @@ sys.path.insert(0, str(PROJECT_DIR))
 
 CONFIG_PATH = PROJECT_DIR / "gazette_watcher" / "config.py"
 ICON_PATH = PROJECT_DIR / "icon.ico"
+
+if getattr(sys, "frozen", False):
+    # config.py is meant to be user-editable data, not baked-in code — but
+    # PyInstaller bundles the whole gazette_watcher package into the exe,
+    # and its import hook (in sys.meta_path) intercepts plain
+    # `import gazette_watcher.config` before Python's normal file-based
+    # import ever looks at the real, editable file sitting next to the
+    # exe. Without this, every read (including the actual scheduled
+    # --watch runs, not just the GUI) silently used whatever config.py
+    # looked like at build time — edits saved through Settings, or made
+    # by hand, were completely invisible to the running exe.
+    #
+    # Loading it explicitly by file path and registering it in
+    # sys.modules BEFORE anything else imports gazette_watcher.config
+    # makes every `from . import config` / `from gazette_watcher import
+    # config` elsewhere resolve to this real, on-disk, always-reloadable
+    # version instead.
+    import importlib.util
+
+    import gazette_watcher
+
+    _spec = importlib.util.spec_from_file_location("gazette_watcher.config", str(CONFIG_PATH))
+    _config_module = importlib.util.module_from_spec(_spec)
+    _spec.loader.exec_module(_config_module)
+    sys.modules["gazette_watcher.config"] = _config_module
+    gazette_watcher.config = _config_module
+
+import flags
+import i18n
+from gazette_watcher import task_scheduler as ts
+
 TASK_NAME = ts.TASK_NAME
 
 # Small per-machine GUI preferences (theme + language choice) — not app
@@ -398,6 +425,46 @@ class App(tk.Tk):
         self.style.theme_use("clam")  # base theme that actually honors custom colors on Windows
 
         self._build_all()
+        self.after(150, self._maybe_show_first_run_guide)
+
+    def _maybe_show_first_run_guide(self):
+        """Shown once, the very first time this app has ever been opened
+        on this machine (tracked in gui_prefs.json, same file as the
+        theme/language/window-position prefs). Content here is a
+        placeholder — the real step-by-step guide is meant to be written
+        later; this just makes sure the mechanism (detect first run, show
+        it once, never again) is already in place and working."""
+        prefs = _load_gui_prefs()
+        if prefs.get("onboarding_shown"):
+            return
+        self._show_first_run_guide()
+        _save_gui_prefs({**_load_gui_prefs(), "onboarding_shown": True})
+
+    def _show_first_run_guide(self):
+        c = THEMES[self.current_theme]
+        win = tk.Toplevel(self)
+        win.title(self.t("welcome_title"))
+        win.geometry("520x420")
+        win.configure(bg=c["bg"])
+        win.transient(self)
+        win.grab_set()
+        if ICON_PATH.exists():
+            try:
+                win.iconbitmap(str(ICON_PATH))
+            except tk.TclError:
+                pass
+
+        frame = ttk.Frame(win, padding=16)
+        frame.pack(fill="both", expand=True)
+        ttk.Label(frame, text=self.t("welcome_title"), font=("Segoe UI", 13, "bold")).pack(anchor="w", pady=(0, 10))
+
+        body = scrolledtext.ScrolledText(frame, wrap="word", font=("Segoe UI", 10))
+        body.insert("1.0", self.t("welcome_body"))
+        body.configure(state="disabled", bg=c["entry_bg"], fg=c["entry_fg"])
+        body.pack(fill="both", expand=True, pady=(0, 12))
+
+        ttk.Button(frame, text=self.t("welcome_dismiss"), command=win.destroy).pack(anchor="e")
+        win.wait_window()
 
     def t(self, key: str, **kwargs) -> str:
         return i18n.t(self.lang, key, **kwargs)
