@@ -7,7 +7,7 @@ Watches one or more gazette-drouot.com rubrique (article listing) pages and fire
 ## How it works
 
 - Every run, each configured rubrique gets its first `MAX_PAGES` listing pages scanned in full (not just until a "known" article is found — testing showed the site's pagination isn't reliably chronological, so an early stop could silently miss real news).
-- Every article found is compared against stored state (`state/<rubrique-key>.json`) by its numeric id **and** its publish date. New id → notify. Known id but a different date than last time → notify again (the article was likely republished/edited). An article with no date shown at all is only ever notified once, then never re-checked.
+- Every article found is compared against stored state (`state/<rubrique-key>.json`, under `%LOCALAPPDATA%\GazetteDrouotWatcher\`) by its numeric id **and** its publish date. New id → notify. Known id but a different date than last time → notify again (the article was likely republished/edited). An article with no date shown at all is only ever notified once, then never re-checked.
 - First run for a rubrique just records what's currently there as a baseline, silently — no notification flood for pre-existing articles on install.
 - If more than `FLOOD_CAP` new/updated articles turn up in one rubrique in a single run, only the first few get their own toast — the rest collapse into one "N more new posts" summary toast.
 
@@ -19,13 +19,13 @@ Watches one or more gazette-drouot.com rubrique (article listing) pages and fire
 
 ## Configuration
 
-**`gazette_watcher/config.py` is the single file to edit** for everything: which pages to watch, how often to check, how deep to scan, notification flood limits, alert cooldowns, etc. — each setting has a comment explaining it (or edit them through the control panel's Settings tab instead, see below). After changing anything there, the change takes effect on the next run, **except** `POLL_INTERVAL_MINUTES`, which also needs clicking **Install** again in the control panel once to update the actual Windows Task Scheduler job with the new interval.
+**`config.py` is the single file to edit** for everything: which pages to watch, how often to check, how deep to scan, notification flood limits, alert cooldowns, etc. — each setting has a comment explaining it (or edit them through the control panel's Settings tab instead, see below). It lives at `%LOCALAPPDATA%\GazetteDrouotWatcher\config.py` (created there automatically on first run — not next to the `.exe`), so it survives moving or replacing the `.exe` itself. After changing anything there, the change takes effect on the next run, **except** `POLL_INTERVAL_MINUTES`, which also needs clicking **Install** again in the control panel once to update the actual Windows Task Scheduler job with the new interval.
 
 ## Control panel GUI
 
-**This is the app** — a single, self-contained `.exe`, no separate Python install or script files needed on the machine that runs it. A desktop window for everything: install / enable / disable / uninstall the scheduled task (via the native Task Scheduler API directly, no PowerShell involved), and a settings panel (with a "Reset to defaults" if something gets messed up) instead of hand-editing the config file. The flag icon switches the UI language (English, 中文, Español, हिन्दी, العربية, Português, Русский, Français, 日本語, Deutsch — defaults to your Windows UI language, falls back to English); the sun/moon icon switches light/dark (defaults to your Windows theme). Both choices persist in `gui_prefs.json`.
+**This is the app** — a single, self-contained `.exe`, no separate Python install or script files needed on the machine that runs it. A desktop window for everything: install / enable / disable / uninstall the scheduled task (via the native Task Scheduler API directly, no PowerShell involved), and a settings panel (with a "Reset to defaults" if something gets messed up) instead of hand-editing the config file. The flag icon switches the UI language (English, 中文, Español, हिन्दी, العربية, Português, Русский, Français, 日本語, Deutsch — defaults to your Windows UI language, falls back to English); the sun/moon icon switches light/dark (defaults to your Windows theme). Both choices persist in `%LOCALAPPDATA%\GazetteDrouotWatcher\gui_prefs.json`.
 
-**If you just have the `.exe`:** double-click `GazetteDrouotWatcher.exe` — nothing else to install. It expects to sit directly in this project folder, next to `gazette_watcher/`, etc. Click **Install** in the window to register the scheduled task — from then on it checks automatically in the background, in the interval set in `config.py`, without this window (or the app at all) needing to stay open, and it starts itself again after every PC restart.
+**If you just have the `.exe`:** double-click `GazetteDrouotWatcher.exe` — nothing else to install, and nothing else needed alongside it. It's fully standalone: `config.py`, `gui_prefs.json`, `state/`, and `logs/` are all created under `%LOCALAPPDATA%\GazetteDrouotWatcher\` on first run, not next to the `.exe` itself, so it never scatters files into whatever folder it's run from. Click **Install** in the window to register the scheduled task — from then on it checks automatically in the background, in the interval set in `config.py`, without this window (or the app at all) needing to stay open, and it starts itself again after every PC restart.
 
 **Running from source instead:** double-click `main.pyw` (Windows runs `.pyw` files via `pythonw.exe`, no console window), or:
 ```
@@ -53,7 +53,7 @@ Two distinct alert toasts exist, each rate-limited to at most one per `ALERT_COO
 - **"blocked by Cloudflare"** — the site's bot-protection intercepted the request. Almost always fixed by turning off a VPN.
 - **"needs an update"** — a page loaded fine but its HTML doesn't match what this script expects anymore. Most likely gazette-drouot.com changed their page layout and the scraper's selectors (`gazette_watcher/scraper.py`) need updating to match.
 
-`logs/watcher.log` has full detail on every run — check here first if notifications stop appearing.
+`%LOCALAPPDATA%\GazetteDrouotWatcher\logs\watcher.log` has full detail on every run — check here first if notifications stop appearing.
 
 ## Testing without touching the real site
 

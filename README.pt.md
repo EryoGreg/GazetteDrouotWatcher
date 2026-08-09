@@ -7,7 +7,7 @@ Vigia uma ou várias páginas de rubrica (listas de artigos) do gazette-drouot.c
 ## Como funciona
 
 - A cada execução, as primeiras `MAX_PAGES` páginas de listagem de cada rubrica configurada são totalmente analisadas (não apenas até encontrar um artigo "conhecido" — os testes mostraram que a paginação do site não é fiavelmente cronológica, por isso parar cedo poderia perder novidades reais em silêncio).
-- Cada artigo encontrado é comparado com o estado guardado (`state/<rubrique-key>.json`) pelo seu id numérico **e** pela sua data de publicação. Id novo → notifica. Id conhecido mas com data diferente da anterior → notifica novamente (o artigo foi provavelmente republicado/editado). Um artigo sem data apresentada só é notificado uma vez e nunca mais é verificado.
+- Cada artigo encontrado é comparado com o estado guardado (`state/<rubrique-key>.json`, sob `%LOCALAPPDATA%\GazetteDrouotWatcher\`) pelo seu id numérico **e** pela sua data de publicação. Id novo → notifica. Id conhecido mas com data diferente da anterior → notifica novamente (o artigo foi provavelmente republicado/editado). Um artigo sem data apresentada só é notificado uma vez e nunca mais é verificado.
 - A primeira execução para uma rubrica apenas regista o que existe atualmente como base, em silêncio — sem avalanche de notificações para artigos pré-existentes na instalação.
 - Se aparecerem mais de `FLOOD_CAP` artigos novos/atualizados numa rubrica numa única execução, só os primeiros têm notificação própria — o resto é agrupado numa notificação-resumo de "mais N".
 
@@ -19,13 +19,13 @@ Vigia uma ou várias páginas de rubrica (listas de artigos) do gazette-drouot.c
 
 ## Configuração
 
-**`gazette_watcher/config.py` é o único ficheiro a editar** para tudo: que páginas vigiar, com que frequência verificar, que profundidade analisar, limites de notificação, tempos de espera de alertas, etc. — cada definição tem um comentário explicativo (ou edite-as no separador Definições do painel de controlo, ver abaixo). Após qualquer alteração aí, o efeito surge na próxima execução, **exceto** `POLL_INTERVAL_MINUTES`, que também requer clicar novamente em **Instalar** no painel de controlo para atualizar a tarefa real do Agendador de Tarefas do Windows com o novo intervalo.
+**`config.py` é o único ficheiro a editar** para tudo: que páginas vigiar, com que frequência verificar, que profundidade analisar, limites de notificação, tempos de espera de alertas, etc. — cada definição tem um comentário explicativo (ou edite-as no separador Definições do painel de controlo, ver abaixo). Fica em `%LOCALAPPDATA%\GazetteDrouotWatcher\config.py` (criado automaticamente aí na primeira execução — não junto ao `.exe`), pelo que sobrevive a mover ou substituir o próprio `.exe`. Após qualquer alteração aí, o efeito surge na próxima execução, **exceto** `POLL_INTERVAL_MINUTES`, que também requer clicar novamente em **Instalar** no painel de controlo para atualizar a tarefa real do Agendador de Tarefas do Windows com o novo intervalo.
 
 ## Painel de controlo (GUI)
 
-**Esta é a aplicação** — um único `.exe` autónomo, sem necessidade de instalação separada do Python nem de ficheiros de script na máquina que o executa. Uma janela de ambiente de trabalho para tudo: instalar / ativar / desativar / desinstalar a tarefa agendada (diretamente através da API nativa do Agendador de Tarefas, sem PowerShell), e um painel de definições (com "Repor predefinições" caso algo corra mal) em vez de editar o ficheiro de configuração à mão. O ícone da bandeira muda o idioma da interface (inglês, 中文, español, हिन्दी, العربية, português, русский, français, 日本語, alemão — segue por defeito o idioma do Windows, recorrendo ao inglês caso não seja suportado); o ícone sol/lua alterna entre claro/escuro (segue por defeito o tema do Windows). Ambas as escolhas persistem em `gui_prefs.json`.
+**Esta é a aplicação** — um único `.exe` autónomo, sem necessidade de instalação separada do Python nem de ficheiros de script na máquina que o executa. Uma janela de ambiente de trabalho para tudo: instalar / ativar / desativar / desinstalar a tarefa agendada (diretamente através da API nativa do Agendador de Tarefas, sem PowerShell), e um painel de definições (com "Repor predefinições" caso algo corra mal) em vez de editar o ficheiro de configuração à mão. O ícone da bandeira muda o idioma da interface (inglês, 中文, español, हिन्दी, العربية, português, русский, français, 日本語, alemão — segue por defeito o idioma do Windows, recorrendo ao inglês caso não seja suportado); o ícone sol/lua alterna entre claro/escuro (segue por defeito o tema do Windows). Ambas as escolhas persistem em `%LOCALAPPDATA%\GazetteDrouotWatcher\gui_prefs.json`.
 
-**Se só tem o `.exe`:** faça duplo clique em `GazetteDrouotWatcher.exe` — nada mais a instalar. Deve estar diretamente nesta pasta do projeto, junto a `gazette_watcher/`, etc. Clique em **Instalar** na janela para registar a tarefa agendada — a partir daí, a verificação acontece automaticamente em segundo plano, no intervalo definido em `config.py`, sem que esta janela (nem a aplicação) precise de ficar aberta, e reinicia-se sozinha após cada reinício do PC.
+**Se só tem o `.exe`:** faça duplo clique em `GazetteDrouotWatcher.exe` — nada mais a instalar, e nada mais necessário ao lado. É totalmente autónomo: `config.py`, `gui_prefs.json`, `state/` e `logs/` são todos criados sob `%LOCALAPPDATA%\GazetteDrouotWatcher\` na primeira execução, não junto ao próprio `.exe`, pelo que nunca espalha ficheiros pela pasta a partir da qual é executado. Clique em **Instalar** na janela para registar a tarefa agendada — a partir daí, a verificação acontece automaticamente em segundo plano, no intervalo definido em `config.py`, sem que esta janela (nem a aplicação) precise de ficar aberta, e reinicia-se sozinha após cada reinício do PC.
 
 **A executar a partir do código-fonte:** faça duplo clique em `main.pyw` (o Windows executa ficheiros `.pyw` através do `pythonw.exe`, sem janela de consola), ou:
 ```
@@ -53,7 +53,7 @@ Existem duas notificações de alerta distintas, cada uma limitada a no máximo 
 - **"blocked by Cloudflare"** — a proteção anti-bot do site interceptou o pedido. Quase sempre resolvido desligando uma VPN.
 - **"needs an update"** — uma página carregou bem mas o seu HTML já não corresponde ao que este script espera. É mais provável que o gazette-drouot.com tenha mudado o esquema das suas páginas e os seletores do scraper (`gazette_watcher/scraper.py`) precisem de ser atualizados para corresponder.
 
-`logs/watcher.log` tem o detalhe completo de cada execução — consulte primeiro aqui se as notificações deixarem de aparecer.
+`%LOCALAPPDATA%\GazetteDrouotWatcher\logs\watcher.log` tem o detalhe completo de cada execução — consulte primeiro aqui se as notificações deixarem de aparecer.
 
 ## Testar sem tocar no site real
 
