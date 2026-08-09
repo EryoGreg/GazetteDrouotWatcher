@@ -36,8 +36,10 @@ import ctypes
 import json
 import os
 import sys
+import threading
 import tkinter as tk
 import types
+import urllib.request
 import webbrowser
 import winreg
 from pathlib import Path
@@ -149,6 +151,7 @@ _load_live_config()
 
 import flags
 import i18n
+import tray_icon
 from gazette_watcher import task_scheduler as ts
 
 TASK_NAME = ts.TASK_NAME
@@ -164,6 +167,15 @@ if not GUI_PREFS_PATH.exists():
 
 AUTHOR = "Grégoire Pessiot"
 AUTHOR_URL = "https://github.com/EryoGreg?tab=repositories"
+
+# Bump this on every release — compared against GitHub's "latest release"
+# tag by the Updates section to tell the user a newer version exists.
+APP_VERSION = "1.0.0"
+GITHUB_REPO = "EryoGreg/GazetteDrouotWatcher"
+GITHUB_LATEST_RELEASE_API = f"https://api.github.com/repos/{GITHUB_REPO}/releases/latest"
+RELEASES_PAGE_URL = f"https://github.com/{GITHUB_REPO}/releases/latest"
+
+LOG_FILE_PATH = APPDATA_DIR / "logs" / "watcher.log"
 
 # The simple (non-rubrique) settings this GUI can edit, in display order.
 # Each: (config.py variable name, i18n label key, i18n description key, value type)
@@ -308,6 +320,16 @@ def _do_sync_installed_task() -> tuple[bool, str]:
     if was_disabled:
         return _call_task_scheduler(ts.set_enabled, False)
     return True, ""
+
+
+def _version_tuple(version: str) -> tuple[int, ...]:
+    """"1.2.3" -> (1, 2, 3), for a plain numeric comparison — a version
+    string that doesn't parse this way (or isn't found at all) sorts as
+    (), i.e. never counts as newer than anything real."""
+    try:
+        return tuple(int(p) for p in version.split("."))
+    except ValueError:
+        return ()
 
 
 def _is_admin() -> bool:
@@ -492,6 +514,7 @@ class App(tk.Tk):
         # this is checked once here rather than on every button click —
         # every action-button's disabled/normal state derives from it.
         self._is_admin_at_launch = _is_admin()
+        self._tray_icon: tray_icon.TrayIcon | None = None
         self.minsize(640, 560)
         self.protocol("WM_DELETE_WINDOW", self.on_close)
         if ICON_PATH.exists():
@@ -551,6 +574,7 @@ class App(tk.Tk):
         self.style.theme_use("clam")  # base theme that actually honors custom colors on Windows
 
         self._build_all()
+        self._apply_tray_icon_preference(_load_gui_prefs().get("show_tray_icon", False))
         self.after(150, self._maybe_show_first_run_guide)
 
     def _maybe_show_first_run_guide(self):
@@ -664,6 +688,7 @@ class App(tk.Tk):
         self.title(f"Gazette Drouot Watcher — {self.t('window_title_suffix')}")
 
         self._build_header()
+        self._build_updates_section()
         self._build_task_section()
         self._build_settings_section()
         self._build_log_section()
@@ -835,6 +860,75 @@ class App(tk.Tk):
             self.update_idletasks()
             self.geometry(f"{w}x{h}")
 
+    # -- update check -----------------------------------------------------------
+    def _build_updates_section(self):
+        frame = ttk.LabelFrame(self, text=self.t("section_updates"), padding=12)
+        frame.pack(fill="x", padx=12, pady=(0, 8))
+
+        note = ttk.Label(frame, text=self.t("updates_note"), wraplength=700, style="Desc.TLabel")
+        note.pack(anchor="w", pady=(0, 8))
+        self._desc_labels.append(note)
+
+        row = ttk.Frame(frame)
+        row.pack(fill="x")
+        self.update_status_var = tk.StringVar(value=self.t("update_checking"))
+        ttk.Label(row, textvariable=self.update_status_var).pack(side="left")
+        self.update_download_button = ttk.Button(
+            row, text=self.t("btn_download_update"), command=self._open_latest_release, state="disabled"
+        )
+        self.update_download_button.pack(side="right", padx=(6, 0))
+        ttk.Button(row, text=self.t("btn_check_updates"), command=self._check_for_updates_async).pack(side="right")
+
+        self._latest_release_url = RELEASES_PAGE_URL
+        self._check_for_updates_async()
+
+    def _check_for_updates_async(self):
+        self.update_status_var.set(self.t("update_checking"))
+        self.update_download_button.configure(state="disabled")
+        threading.Thread(target=self._check_for_updates_worker, daemon=True).start()
+
+    def _check_for_updates_worker(self):
+        try:
+            req = urllib.request.Request(
+                GITHUB_LATEST_RELEASE_API,
+                headers={"Accept": "application/vnd.github+json", "User-Agent": "GazetteDrouotWatcher"},
+            )
+            with urllib.request.urlopen(req, timeout=8) as resp:
+                data = json.loads(resp.read().decode("utf-8"))
+            latest = str(data.get("tag_name", "")).lstrip("vV")
+            url = data.get("html_url") or RELEASES_PAGE_URL
+        except Exception:
+            # No internet, GitHub rate-limited, API shape changed, etc. --
+            # none of that should ever be a hard error to a user just
+            # opening the control panel; the check just silently gives up.
+            latest, url = None, None
+
+        # This runs on a background thread, so the window may have been
+        # closed (and self already destroyed) by the time the request
+        # comes back -- self.after() itself would raise in that case,
+        # which would otherwise surface as an unhandled exception on a
+        # daemon thread right as the app is shutting down.
+        try:
+            self.after(0, self._on_update_check_done, latest, url)
+        except (RuntimeError, tk.TclError):
+            pass
+
+    def _on_update_check_done(self, latest_version: str | None, url: str | None):
+        if not self.winfo_exists():
+            return
+        if not latest_version:
+            self.update_status_var.set(self.t("update_check_failed"))
+            return
+        self._latest_release_url = url or RELEASES_PAGE_URL
+        if _version_tuple(latest_version) > _version_tuple(APP_VERSION):
+            self.update_status_var.set(self.t("update_available", version=latest_version))
+            self.update_download_button.configure(state="normal")
+        else:
+            self.update_status_var.set(self.t("update_up_to_date", version=APP_VERSION))
+
+    def _open_latest_release(self):
+        webbrowser.open(self._latest_release_url)
+
     # -- scheduled task controls ---------------------------------------------
     def _build_task_section(self):
         frame = ttk.LabelFrame(self, text=self.t("section_task"), padding=12)
@@ -852,6 +946,9 @@ class App(tk.Tk):
             side="left", padx=(4, 0)
         )
         ttk.Button(status_row, text=self.t("btn_refresh"), command=self.refresh_status).pack(side="right")
+        ttk.Button(status_row, text=self.t("btn_open_log"), command=self._open_log_file).pack(
+            side="right", padx=(0, 6)
+        )
 
         action_state = "normal" if self._is_admin_at_launch else "disabled"
 
@@ -880,9 +977,25 @@ class App(tk.Tk):
             side="left", padx=6
         )
 
+        # Off by default -- most people already have more tray icons than
+        # they know what to do with, so this is purely opt-in, as a
+        # reminder that the background checks are still running even with
+        # this window closed (closing it then just hides it to the tray;
+        # the tray icon's own "Exit" is what actually quits).
+        self.tray_icon_var = tk.BooleanVar(value=self._tray_icon is not None)
+        ttk.Checkbutton(
+            frame,
+            text=self.t("show_tray_icon_checkbox"),
+            variable=self.tray_icon_var,
+            command=lambda: self.on_toggle_tray_icon(self.tray_icon_var),
+        ).pack(anchor="w", pady=(8, 0))
+
     def _on_restart_as_admin_click(self):
         if _relaunch_as_admin():
-            self.on_close()
+            # Always a real shutdown, never hide-to-tray -- this process is
+            # about to be replaced by the elevated relaunch, so leaving it
+            # running hidden in the tray would just be a stray duplicate.
+            self._really_quit()
 
     def refresh_status(self):
         code = _get_task_status_code()
@@ -890,6 +1003,15 @@ class App(tk.Tk):
             code, code
         )
         self.status_var.set(text)
+
+    def _open_log_file(self):
+        if not LOG_FILE_PATH.exists():
+            messagebox.showinfo(self.t("btn_open_log"), self.t("log_file_missing"))
+            return
+        try:
+            os.startfile(str(LOG_FILE_PATH))
+        except OSError as e:
+            messagebox.showerror(self.t("btn_open_log"), self.t("err_open_log_failed", error=e))
 
     def _run_action(self, action_key: str, fn):
         action_name = self.t(action_key)
@@ -900,7 +1022,7 @@ class App(tk.Tk):
             self.log(self.t("log_permission_hint"))
             if messagebox.askyesno(action_name, self.t("dlg_admin_needed_body", action=action_name)):
                 if _relaunch_as_admin():
-                    self.on_close()
+                    self._really_quit()  # see _on_restart_as_admin_click -- same reasoning
             return
 
         # Translate the internal sentinels into something a user should
@@ -1343,6 +1465,19 @@ class App(tk.Tk):
 
     # -- lifecycle -------------------------------------------------------------
     def on_close(self):
+        """The window's own close (X) button — hides to the tray instead of
+        actually exiting if the tray icon is turned on, same as any other
+        minimize-to-tray app. _really_quit() (tray's own Exit item, or an
+        admin relaunch replacing this process) is what actually shuts down."""
+        if self._tray_icon is not None:
+            self.withdraw()
+            return
+        self._really_quit()
+
+    def _really_quit(self):
+        if self._tray_icon is not None:
+            self._tray_icon.stop()
+            self._tray_icon = None
         try:
             prefs = _load_gui_prefs()
             prefs["window"] = {
@@ -1355,6 +1490,29 @@ class App(tk.Tk):
         except Exception:
             pass
         self.destroy()
+
+    def _restore_from_tray(self):
+        self.deiconify()
+        self.lift()
+        self.focus_force()
+
+    def _apply_tray_icon_preference(self, enabled: bool):
+        if enabled and self._tray_icon is None:
+            self._tray_icon = tray_icon.TrayIcon(
+                icon_path=str(ICON_PATH) if ICON_PATH.exists() else None,
+                tooltip="Gazette Drouot Watcher",
+                on_open=lambda: self.after(0, self._restore_from_tray),
+                on_exit=lambda: self.after(0, self._really_quit),
+            )
+            self._tray_icon.start()
+        elif not enabled and self._tray_icon is not None:
+            self._tray_icon.stop()
+            self._tray_icon = None
+
+    def on_toggle_tray_icon(self, var: tk.BooleanVar):
+        enabled = var.get()
+        self._apply_tray_icon_preference(enabled)
+        _save_gui_prefs({**_load_gui_prefs(), "show_tray_icon": enabled})
 
 
 if __name__ == "__main__":

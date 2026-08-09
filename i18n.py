@@ -48,6 +48,20 @@ TRANSLATIONS = {
         "status_ready": "Installed and enabled",
         "status_disabled": "Disabled",
         "btn_refresh": "Refresh",
+        "section_updates": "Updates",
+        "updates_note": (
+            "Checks GitHub for a newer release of this app. Nothing is downloaded or installed "
+            "automatically — the button just opens the release page in your browser."
+        ),
+        "btn_check_updates": "Check for updates",
+        "btn_download_update": "Download update",
+        "update_checking": "Checking for updates…",
+        "update_up_to_date": "You're up to date (v{version}).",
+        "update_available": "A new version is available: v{version}.",
+        "update_check_failed": "Couldn't check for updates.",
+        "btn_open_log": "Open log file",
+        "log_file_missing": "No log file yet — nothing has run so far.",
+        "err_open_log_failed": "Couldn't open the log file:\n\n{error}",
         "btn_install": "Install",
         "btn_enable": "Enable",
         "btn_disable": "Disable",
@@ -147,6 +161,7 @@ TRANSLATIONS = {
         "welcome_dismiss": 'Got it',
         "welcome_dont_show_again": "Don't show this again",
         "show_guide_checkbox": 'Show setup guide on next start',
+        "show_tray_icon_checkbox": "Show a tray icon (right-click it to fully quit)",
     },
     "fr": {
         "window_title_suffix": "panneau de configuration",
@@ -169,6 +184,21 @@ TRANSLATIONS = {
         "status_ready": "Installée et activée",
         "status_disabled": "Désactivée",
         "btn_refresh": "Actualiser",
+        "section_updates": "Mises à jour",
+        "updates_note": (
+            "Vérifie sur GitHub s'il existe une version plus récente de l'application. Rien n'est "
+            "téléchargé ni installé automatiquement — le bouton ouvre simplement la page de la "
+            "version dans votre navigateur."
+        ),
+        "btn_check_updates": "Vérifier les mises à jour",
+        "btn_download_update": "Télécharger la mise à jour",
+        "update_checking": "Vérification des mises à jour…",
+        "update_up_to_date": "Vous êtes à jour (v{version}).",
+        "update_available": "Une nouvelle version est disponible : v{version}.",
+        "update_check_failed": "Impossible de vérifier les mises à jour.",
+        "btn_open_log": "Ouvrir le journal",
+        "log_file_missing": "Pas encore de journal — rien ne s'est exécuté pour l'instant.",
+        "err_open_log_failed": "Impossible d'ouvrir le journal :\n\n{error}",
         "btn_install": "Installer",
         "btn_enable": "Activer",
         "btn_disable": "Désactiver",
@@ -268,6 +298,7 @@ TRANSLATIONS = {
         "welcome_dismiss": 'Compris',
         "welcome_dont_show_again": 'Ne plus afficher ce message',
         "show_guide_checkbox": 'Afficher le guide de configuration au prochain démarrage',
+        "show_tray_icon_checkbox": "Afficher une icône dans la zone de notification (clic droit pour quitter complètement)",
     },
     "es": {
         "window_title_suffix": "panel de control",
@@ -290,6 +321,20 @@ TRANSLATIONS = {
         "status_ready": "Instalada y activada",
         "status_disabled": "Desactivada",
         "btn_refresh": "Actualizar",
+        "section_updates": "Actualizaciones",
+        "updates_note": (
+            "Comprueba en GitHub si hay una versión más reciente de la aplicación. No se descarga ni "
+            "instala nada automáticamente — el botón solo abre la página de la versión en tu navegador."
+        ),
+        "btn_check_updates": "Buscar actualizaciones",
+        "btn_download_update": "Descargar actualización",
+        "update_checking": "Buscando actualizaciones…",
+        "update_up_to_date": "Estás al día (v{version}).",
+        "update_available": "Hay una nueva versión disponible: v{version}.",
+        "update_check_failed": "No se pudieron buscar actualizaciones.",
+        "btn_open_log": "Abrir archivo de registro",
+        "log_file_missing": "Todavía no hay archivo de registro — nada se ha ejecutado aún.",
+        "err_open_log_failed": "No se pudo abrir el archivo de registro:\n\n{error}",
         "btn_install": "Instalar",
         "btn_enable": "Activar",
         "btn_disable": "Desactivar",
@@ -389,6 +434,7 @@ TRANSLATIONS = {
         "welcome_dismiss": 'Entendido',
         "welcome_dont_show_again": 'No volver a mostrar esto',
         "show_guide_checkbox": 'Mostrar la guía de configuración en el próximo inicio',
+        "show_tray_icon_checkbox": "Mostrar un icono en la bandeja (clic derecho para salir por completo)",
     },
     "de": {
         "window_title_suffix": "Bedienfeld",
@@ -411,6 +457,20 @@ TRANSLATIONS = {
         "status_ready": "Installiert und aktiviert",
         "status_disabled": "Deaktiviert",
         "btn_refresh": "Aktualisieren",
+        "section_updates": "Updates",
+        "updates_note": (
+            "Prüft auf GitHub, ob eine neuere Version der App verfügbar ist. Es wird nichts automatisch "
+            "heruntergeladen oder installiert — die Schaltfläche öffnet nur die Release-Seite im Browser."
+        ),
+        "btn_check_updates": "Nach Updates suchen",
+        "btn_download_update": "Update herunterladen",
+        "update_checking": "Suche nach Updates…",
+        "update_up_to_date": "Du bist auf dem neuesten Stand (v{version}).",
+        "update_available": "Eine neue Version ist verfügbar: v{version}.",
+        "update_check_failed": "Update-Suche fehlgeschlagen.",
+        "btn_open_log": "Protokolldatei öffnen",
+        "log_file_missing": "Noch keine Protokolldatei — es wurde bisher noch nichts ausgeführt.",
+        "err_open_log_failed": "Protokolldatei konnte nicht geöffnet werden:\n\n{error}",
         "btn_install": "Installieren",
         "btn_enable": "Aktivieren",
         "btn_disable": "Deaktivieren",
@@ -510,6 +570,7 @@ TRANSLATIONS = {
         "welcome_dismiss": 'Verstanden',
         "welcome_dont_show_again": 'Nicht mehr anzeigen',
         "show_guide_checkbox": 'Einrichtungsleitfaden beim nächsten Start anzeigen',
+        "show_tray_icon_checkbox": "Ein Symbol im Infobereich anzeigen (Rechtsklick zum vollständigen Beenden)",
     },
     "pt": {
         "window_title_suffix": "painel de controlo",
@@ -532,6 +593,20 @@ TRANSLATIONS = {
         "status_ready": "Instalada e ativada",
         "status_disabled": "Desativada",
         "btn_refresh": "Atualizar",
+        "section_updates": "Atualizações",
+        "updates_note": (
+            "Verifica no GitHub se há uma versão mais recente do aplicativo. Nada é baixado ou "
+            "instalado automaticamente — o botão apenas abre a página da versão no seu navegador."
+        ),
+        "btn_check_updates": "Verificar atualizações",
+        "btn_download_update": "Baixar atualização",
+        "update_checking": "Verificando atualizações…",
+        "update_up_to_date": "Você está atualizado (v{version}).",
+        "update_available": "Uma nova versão está disponível: v{version}.",
+        "update_check_failed": "Não foi possível verificar atualizações.",
+        "btn_open_log": "Abrir arquivo de log",
+        "log_file_missing": "Ainda não há arquivo de log — nada foi executado até agora.",
+        "err_open_log_failed": "Não foi possível abrir o arquivo de log:\n\n{error}",
         "btn_install": "Instalar",
         "btn_enable": "Ativar",
         "btn_disable": "Desativar",
@@ -631,6 +706,7 @@ TRANSLATIONS = {
         "welcome_dismiss": 'Entendi',
         "welcome_dont_show_again": 'Não mostrar novamente',
         "show_guide_checkbox": 'Mostrar guia de configuração no próximo arranque',
+        "show_tray_icon_checkbox": "Mostrar um ícone na bandeja (clique com o botão direito para sair completamente)",
     },
     "ru": {
         "window_title_suffix": "панель управления",
@@ -653,6 +729,20 @@ TRANSLATIONS = {
         "status_ready": "Установлена и включена",
         "status_disabled": "Отключена",
         "btn_refresh": "Обновить",
+        "section_updates": "Обновления",
+        "updates_note": (
+            "Проверяет на GitHub, не вышла ли более новая версия приложения. Ничего не скачивается и "
+            "не устанавливается автоматически — кнопка просто открывает страницу релиза в браузере."
+        ),
+        "btn_check_updates": "Проверить обновления",
+        "btn_download_update": "Скачать обновление",
+        "update_checking": "Проверка обновлений…",
+        "update_up_to_date": "У вас последняя версия (v{version}).",
+        "update_available": "Доступна новая версия: v{version}.",
+        "update_check_failed": "Не удалось проверить обновления.",
+        "btn_open_log": "Открыть файл журнала",
+        "log_file_missing": "Файла журнала пока нет — ничего ещё не запускалось.",
+        "err_open_log_failed": "Не удалось открыть файл журнала:\n\n{error}",
         "btn_install": "Установить",
         "btn_enable": "Включить",
         "btn_disable": "Отключить",
@@ -752,6 +842,7 @@ TRANSLATIONS = {
         "welcome_dismiss": 'Понятно',
         "welcome_dont_show_again": 'Больше не показывать',
         "show_guide_checkbox": 'Показывать руководство по настройке при следующем запуске',
+        "show_tray_icon_checkbox": "Показывать значок в трее (правый клик, чтобы полностью выйти)",
     },
     "zh": {
         "window_title_suffix": "控制面板",
@@ -773,6 +864,17 @@ TRANSLATIONS = {
         "status_ready": "已安装并已启用",
         "status_disabled": "已禁用",
         "btn_refresh": "刷新",
+        "section_updates": "更新",
+        "updates_note": "检查 GitHub 上是否有更新版本的应用。不会自动下载或安装任何内容——该按钮只会在浏览器中打开发布页面。",
+        "btn_check_updates": "检查更新",
+        "btn_download_update": "下载更新",
+        "update_checking": "正在检查更新…",
+        "update_up_to_date": "已是最新版本（v{version}）。",
+        "update_available": "有新版本可用：v{version}。",
+        "update_check_failed": "无法检查更新。",
+        "btn_open_log": "打开日志文件",
+        "log_file_missing": "尚无日志文件——目前还没有运行过。",
+        "err_open_log_failed": "无法打开日志文件：\n\n{error}",
         "btn_install": "安装",
         "btn_enable": "启用",
         "btn_disable": "禁用",
@@ -867,6 +969,7 @@ TRANSLATIONS = {
         "welcome_dismiss": '知道了',
         "welcome_dont_show_again": '不再显示',
         "show_guide_checkbox": '下次启动时显示设置指南',
+        "show_tray_icon_checkbox": "显示系统托盘图标（右键单击可完全退出）",
     },
     "ja": {
         "window_title_suffix": "コントロールパネル",
@@ -888,6 +991,20 @@ TRANSLATIONS = {
         "status_ready": "インストール済み・有効",
         "status_disabled": "無効",
         "btn_refresh": "更新",
+        "section_updates": "アップデート",
+        "updates_note": (
+            "GitHub でこのアプリの新しいバージョンがあるか確認します。自動でダウンロードやインストール"
+            "が行われることはありません——ボタンを押すとブラウザでリリースページが開くだけです。"
+        ),
+        "btn_check_updates": "アップデートを確認",
+        "btn_download_update": "アップデートをダウンロード",
+        "update_checking": "アップデートを確認しています…",
+        "update_up_to_date": "最新の状態です（v{version}）。",
+        "update_available": "新しいバージョンが利用可能です：v{version}。",
+        "update_check_failed": "アップデートを確認できませんでした。",
+        "btn_open_log": "ログファイルを開く",
+        "log_file_missing": "まだログファイルがありません——これまでに実行されたことがありません。",
+        "err_open_log_failed": "ログファイルを開けませんでした：\n\n{error}",
         "btn_install": "インストール",
         "btn_enable": "有効化",
         "btn_disable": "無効化",
@@ -988,6 +1105,7 @@ TRANSLATIONS = {
         "welcome_dismiss": 'わかりました',
         "welcome_dont_show_again": '次回から表示しない',
         "show_guide_checkbox": '次回起動時にセットアップガイドを表示する',
+        "show_tray_icon_checkbox": "タスクトレイにアイコンを表示する（完全に終了するには右クリック）",
     },
     "hi": {
         "window_title_suffix": "नियंत्रण पैनल",
@@ -1009,6 +1127,20 @@ TRANSLATIONS = {
         "status_ready": "इंस्टॉल और सक्षम",
         "status_disabled": "अक्षम",
         "btn_refresh": "रीफ्रेश करें",
+        "section_updates": "अपडेट",
+        "updates_note": (
+            "यह ऐप का नया संस्करण है या नहीं, यह जानने के लिए GitHub की जाँच करता है। कुछ भी अपने आप "
+            "डाउनलोड या इंस्टॉल नहीं होता — बटन दबाने पर बस आपके ब्राउज़र में रिलीज़ पेज खुलता है।"
+        ),
+        "btn_check_updates": "अपडेट जाँचें",
+        "btn_download_update": "अपडेट डाउनलोड करें",
+        "update_checking": "अपडेट जाँचे जा रहे हैं…",
+        "update_up_to_date": "आप नवीनतम संस्करण पर हैं (v{version})।",
+        "update_available": "एक नया संस्करण उपलब्ध है: v{version}।",
+        "update_check_failed": "अपडेट जाँचे नहीं जा सके।",
+        "btn_open_log": "लॉग फ़ाइल खोलें",
+        "log_file_missing": "अभी तक कोई लॉग फ़ाइल नहीं है — अब तक कुछ भी नहीं चला है।",
+        "err_open_log_failed": "लॉग फ़ाइल नहीं खोली जा सकी:\n\n{error}",
         "btn_install": "इंस्टॉल करें",
         "btn_enable": "सक्षम करें",
         "btn_disable": "अक्षम करें",
@@ -1107,6 +1239,7 @@ TRANSLATIONS = {
         "welcome_dismiss": 'समझ गया',
         "welcome_dont_show_again": 'यह दोबारा न दिखाएं',
         "show_guide_checkbox": 'अगली बार शुरू होने पर सेटअप गाइड दिखाएं',
+        "show_tray_icon_checkbox": "ट्रे आइकन दिखाएं (पूरी तरह बंद करने के लिए राइट-क्लिक करें)",
     },
     "ar": {
         "window_title_suffix": "لوحة التحكم",
@@ -1128,6 +1261,20 @@ TRANSLATIONS = {
         "status_ready": "مثبتة ومفعّلة",
         "status_disabled": "معطّلة",
         "btn_refresh": "تحديث",
+        "section_updates": "التحديثات",
+        "updates_note": (
+            "يتحقق من GitHub لمعرفة ما إذا كان هناك إصدار أحدث من التطبيق. لا يتم تنزيل أو تثبيت أي "
+            "شيء تلقائيًا — الزر يفتح فقط صفحة الإصدار في متصفحك."
+        ),
+        "btn_check_updates": "التحقق من التحديثات",
+        "btn_download_update": "تنزيل التحديث",
+        "update_checking": "جارٍ التحقق من التحديثات…",
+        "update_up_to_date": "أنت محدَّث (v{version}).",
+        "update_available": "يتوفر إصدار جديد: v{version}.",
+        "update_check_failed": "تعذّر التحقق من التحديثات.",
+        "btn_open_log": "فتح ملف السجل",
+        "log_file_missing": "لا يوجد ملف سجل بعد — لم يتم تشغيل أي شيء حتى الآن.",
+        "err_open_log_failed": "تعذّر فتح ملف السجل:\n\n{error}",
         "btn_install": "تثبيت",
         "btn_enable": "تفعيل",
         "btn_disable": "تعطيل",
@@ -1226,6 +1373,7 @@ TRANSLATIONS = {
         "welcome_dismiss": 'فهمت',
         "welcome_dont_show_again": 'عدم إظهار هذا مرة أخرى',
         "show_guide_checkbox": 'إظهار دليل الإعداد عند بدء التشغيل التالي',
+        "show_tray_icon_checkbox": "إظهار أيقونة في شريط النظام (انقر بزر الفأرة الأيمن للخروج الكامل)",
     },
 }
 
