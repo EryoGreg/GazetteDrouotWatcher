@@ -447,17 +447,17 @@ class App(tk.Tk):
         self.after(150, self._maybe_show_first_run_guide)
 
     def _maybe_show_first_run_guide(self):
-        """Shown once, the very first time this app has ever been opened
-        on this machine (tracked in gui_prefs.json, same file as the
-        theme/language/window-position prefs). Content here is a
-        placeholder — the real step-by-step guide is meant to be written
-        later; this just makes sure the mechanism (detect first run, show
-        it once, never again) is already in place and working."""
-        prefs = _load_gui_prefs()
-        if prefs.get("onboarding_shown"):
+        """Shown on every launch — not just the first ever — until the
+        user checks "don't show this again" inside the dialog itself (or
+        unchecks the equivalent checkbox in the header, see
+        _build_header). Tracked as show_guide_on_start in gui_prefs.json,
+        defaulting to True (shown) when absent, e.g. on a fresh install.
+        Content here is a placeholder — the real step-by-step guide is
+        meant to be written later; this just makes sure the mechanism is
+        already in place and working."""
+        if not _load_gui_prefs().get("show_guide_on_start", True):
             return
         self._show_first_run_guide()
-        _save_gui_prefs({**_load_gui_prefs(), "onboarding_shown": True})
 
     def _show_first_run_guide(self):
         c = THEMES[self.current_theme]
@@ -490,8 +490,25 @@ class App(tk.Tk):
         body.configure(state="disabled", bg=c["entry_bg"], fg=c["entry_fg"])
         body.pack(fill="both", expand=True, pady=(0, 12))
 
-        ttk.Button(frame, text=self.t("welcome_dismiss"), command=win.destroy).pack(anchor="e")
+        dont_show_var = tk.BooleanVar(value=False)
+
+        def dismiss():
+            if dont_show_var.get():
+                self._set_show_guide_on_start(False)
+            win.destroy()
+
+        bottom_row = ttk.Frame(frame)
+        bottom_row.pack(fill="x")
+        ttk.Checkbutton(bottom_row, text=self.t("welcome_dont_show_again"), variable=dont_show_var).pack(side="left")
+        ttk.Button(bottom_row, text=self.t("welcome_dismiss"), command=dismiss).pack(side="right")
+
+        win.protocol("WM_DELETE_WINDOW", dismiss)
         win.wait_window()
+
+    def _set_show_guide_on_start(self, value: bool):
+        _save_gui_prefs({**_load_gui_prefs(), "show_guide_on_start": value})
+        if hasattr(self, "show_guide_var"):
+            self.show_guide_var.set(value)
 
     def t(self, key: str, **kwargs) -> str:
         return i18n.t(self.lang, key, **kwargs)
@@ -578,6 +595,18 @@ class App(tk.Tk):
         )
         self.author_link.pack(side="left")
         self.author_link.bind("<Button-1>", lambda e: webbrowser.open(AUTHOR_URL))
+
+        # App-level preference (like theme/language above, not a watcher
+        # setting — lives in gui_prefs.json, applies immediately, no Save
+        # needed). Brings the first-run guide back if it was dismissed.
+        self.show_guide_var = tk.BooleanVar(value=_load_gui_prefs().get("show_guide_on_start", True))
+        ttk.Checkbutton(
+            self.header_frame,
+            text=self.t("show_guide_checkbox"),
+            variable=self.show_guide_var,
+            command=lambda: self._set_show_guide_on_start(self.show_guide_var.get()),
+        ).pack(anchor="w", pady=(6, 0))
+
         ttk.Separator(self).pack(fill="x")
 
     def _show_language_menu(self, event):

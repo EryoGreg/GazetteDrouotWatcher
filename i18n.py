@@ -139,6 +139,8 @@ TRANSLATIONS = {
         "welcome_title": 'Welcome to Gazette Drouot Watcher',
         "welcome_body": 'This first-run guide is a placeholder for now — real step-by-step content is coming in a future update. For the moment: click Install below to start watching for new articles, and check Settings if you want to customize anything.',
         "welcome_dismiss": 'Got it',
+        "welcome_dont_show_again": "Don't show this again",
+        "show_guide_checkbox": 'Show setup guide on next start',
     },
     "fr": {
         "window_title_suffix": "panneau de configuration",
@@ -252,6 +254,8 @@ TRANSLATIONS = {
         "welcome_title": 'Bienvenue dans Gazette Drouot Watcher',
         "welcome_body": "Ce guide de premier lancement est provisoire pour l'instant — un contenu détaillé étape par étape arrivera dans une future mise à jour. Pour le moment : cliquez sur Installer ci-dessous pour commencer à surveiller les nouveaux articles, et consultez les Paramètres si vous voulez personnaliser quelque chose.",
         "welcome_dismiss": 'Compris',
+        "welcome_dont_show_again": 'Ne plus afficher ce message',
+        "show_guide_checkbox": 'Afficher le guide de configuration au prochain démarrage',
     },
     "es": {
         "window_title_suffix": "panel de control",
@@ -365,6 +369,8 @@ TRANSLATIONS = {
         "welcome_title": 'Bienvenido a Gazette Drouot Watcher',
         "welcome_body": 'Esta guía de primer inicio es provisional por ahora — un contenido detallado paso a paso llegará en una futura actualización. Por ahora: haga clic en Instalar abajo para empezar a vigilar nuevos artículos, y revise Configuración si quiere personalizar algo.',
         "welcome_dismiss": 'Entendido',
+        "welcome_dont_show_again": 'No volver a mostrar esto',
+        "show_guide_checkbox": 'Mostrar la guía de configuración en el próximo inicio',
     },
     "de": {
         "window_title_suffix": "Bedienfeld",
@@ -478,6 +484,8 @@ TRANSLATIONS = {
         "welcome_title": 'Willkommen bei Gazette Drouot Watcher',
         "welcome_body": 'Dieser Einstiegsleitfaden ist vorerst ein Platzhalter — detaillierte Schritt-für-Schritt-Inhalte folgen in einem zukünftigen Update. Fürs Erste: Klicken Sie unten auf Installieren, um mit der Überwachung neuer Artikel zu beginnen, und schauen Sie bei Bedarf in den Einstellungen vorbei.',
         "welcome_dismiss": 'Verstanden',
+        "welcome_dont_show_again": 'Nicht mehr anzeigen',
+        "show_guide_checkbox": 'Einrichtungsleitfaden beim nächsten Start anzeigen',
     },
     "pt": {
         "window_title_suffix": "painel de controlo",
@@ -591,6 +599,8 @@ TRANSLATIONS = {
         "welcome_title": 'Bem-vindo ao Gazette Drouot Watcher',
         "welcome_body": 'Este guia de primeira execução é provisório por agora — conteúdo detalhado passo a passo chegará numa atualização futura. Por agora: clique em Instalar abaixo para começar a vigiar novos artigos, e veja as Definições se quiser personalizar algo.',
         "welcome_dismiss": 'Entendi',
+        "welcome_dont_show_again": 'Não mostrar novamente',
+        "show_guide_checkbox": 'Mostrar guia de configuração no próximo arranque',
     },
     "ru": {
         "window_title_suffix": "панель управления",
@@ -704,6 +714,8 @@ TRANSLATIONS = {
         "welcome_title": 'Добро пожаловать в Gazette Drouot Watcher',
         "welcome_body": 'Это руководство для первого запуска пока является заглушкой — подробное пошаговое содержание появится в будущем обновлении. Пока что: нажмите «Установить» ниже, чтобы начать отслеживать новые статьи, и загляните в «Настройки», если хотите что-то настроить.',
         "welcome_dismiss": 'Понятно',
+        "welcome_dont_show_again": 'Больше не показывать',
+        "show_guide_checkbox": 'Показывать руководство по настройке при следующем запуске',
     },
     "zh": {
         "window_title_suffix": "控制面板",
@@ -814,6 +826,8 @@ TRANSLATIONS = {
         "welcome_title": '欢迎使用 Gazette Drouot Watcher',
         "welcome_body": '此首次运行指南目前只是一个占位符，详细的分步内容将在未来的更新中提供。现在，请点击下方的安装开始监控新文章，如果想自定义任何内容，请查看设置。',
         "welcome_dismiss": '知道了',
+        "welcome_dont_show_again": '不再显示',
+        "show_guide_checkbox": '下次启动时显示设置指南',
     },
     "ja": {
         "window_title_suffix": "コントロールパネル",
@@ -927,6 +941,8 @@ TRANSLATIONS = {
         "welcome_title": 'Gazette Drouot Watcher へようこそ',
         "welcome_body": 'この初回起動ガイドは現時点では仮の内容です。詳しいステップバイステップの内容は今後のアップデートで提供される予定です。今のところは、下のインストールをクリックして新着記事の監視を開始し、カスタマイズしたい場合は設定をご確認ください。',
         "welcome_dismiss": 'わかりました',
+        "welcome_dont_show_again": '次回から表示しない',
+        "show_guide_checkbox": '次回起動時にセットアップガイドを表示する',
     },
     "hi": {
         "window_title_suffix": "नियंत्रण पैनल",
@@ -1038,6 +1054,8 @@ TRANSLATIONS = {
         "welcome_title": 'Gazette Drouot Watcher में आपका स्वागत है',
         "welcome_body": 'यह पहली बार चलाने वाली गाइड फ़िलहाल एक प्लेसहोल्डर है — विस्तृत चरण-दर-चरण सामग्री भविष्य के अपडेट में आएगी। अभी के लिए: नए लेखों पर नज़र रखना शुरू करने के लिए नीचे इंस्टॉल करें पर क्लिक करें, और कुछ भी अनुकूलित करना हो तो सेटिंग्स देखें।',
         "welcome_dismiss": 'समझ गया',
+        "welcome_dont_show_again": 'यह दोबारा न दिखाएं',
+        "show_guide_checkbox": 'अगली बार शुरू होने पर सेटअप गाइड दिखाएं',
     },
     "ar": {
         "window_title_suffix": "لوحة التحكم",
@@ -1149,6 +1167,8 @@ TRANSLATIONS = {
         "welcome_title": 'مرحبًا بك في Gazette Drouot Watcher',
         "welcome_body": 'هذا الدليل الخاص بالتشغيل الأول هو نص مؤقت في الوقت الحالي — سيصل محتوى تفصيلي خطوة بخطوة في تحديث مستقبلي. في الوقت الحالي: انقر على تثبيت أدناه لبدء مراقبة المقالات الجديدة، وراجع الإعدادات إذا أردت تخصيص أي شيء.',
         "welcome_dismiss": 'فهمت',
+        "welcome_dont_show_again": 'عدم إظهار هذا مرة أخرى',
+        "show_guide_checkbox": 'إظهار دليل الإعداد عند بدء التشغيل التالي',
     },
 }
 
