@@ -485,11 +485,6 @@ class App(tk.Tk):
         frame.pack(fill="both", expand=True)
         ttk.Label(frame, text=self.t("welcome_title"), font=("Segoe UI", 13, "bold")).pack(anchor="w", pady=(0, 10))
 
-        body = scrolledtext.ScrolledText(frame, wrap="word", font=("Segoe UI", 10))
-        body.insert("1.0", self.t("welcome_body"))
-        body.configure(state="disabled", bg=c["entry_bg"], fg=c["entry_fg"])
-        body.pack(fill="both", expand=True, pady=(0, 12))
-
         dont_show_var = tk.BooleanVar(value=False)
 
         def dismiss():
@@ -497,10 +492,20 @@ class App(tk.Tk):
                 self._set_show_guide_on_start(False)
             win.destroy()
 
+        # Packed to the bottom BEFORE the expanding text body below, so it
+        # always reserves its own space and can never get squeezed out by
+        # the body's fill=both/expand=True claiming the whole window —
+        # that's what was happening before (only visible after a manual
+        # resize gave Tk enough room to fit everything at once).
         bottom_row = ttk.Frame(frame)
-        bottom_row.pack(fill="x")
+        bottom_row.pack(side="bottom", fill="x", pady=(12, 0))
         ttk.Checkbutton(bottom_row, text=self.t("welcome_dont_show_again"), variable=dont_show_var).pack(side="left")
         ttk.Button(bottom_row, text=self.t("welcome_dismiss"), command=dismiss).pack(side="right")
+
+        body = scrolledtext.ScrolledText(frame, wrap="word", font=("Segoe UI", 10))
+        body.insert("1.0", self.t("welcome_body"))
+        body.configure(state="disabled", bg=c["entry_bg"], fg=c["entry_fg"])
+        body.pack(fill="both", expand=True)
 
         win.protocol("WM_DELETE_WINDOW", dismiss)
         win.wait_window()
