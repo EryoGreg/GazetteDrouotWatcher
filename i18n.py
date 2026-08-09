@@ -157,6 +157,14 @@ TRANSLATIONS = {
         "log_action_dashes": "--- {action} ---",
         "language_menu_title": "Language",
         "welcome_title": 'Welcome to Gazette Drouot Watcher',
+        "welcome_h1": "What this app does",
+        "welcome_h2": "Who made this",
+        "welcome_h3": "About the Administrator prompt",
+        "welcome_h4": "The scheduled task",
+        "welcome_h5": "Your settings and files",
+        "welcome_h6": "Checking for updates",
+        "welcome_h7": "Nothing here is risky",
+        "welcome_h8": "If something looks wrong",
         "welcome_body": (
             "This app checks a few pages on gazette-drouot.com every so often and pops up a little "
             "notification when something new appears — click the notification to open it in your "
@@ -195,7 +203,6 @@ TRANSLATIONS = {
         "welcome_dismiss": 'Got it',
         "welcome_dont_show_again": "Don't show this again",
         "show_guide_checkbox": 'Show setup guide on next start',
-        "show_tray_icon_checkbox": "Show a tray icon (right-click it to fully quit)",
     },
     "fr": {
         "window_title_suffix": "panneau de configuration",
@@ -328,6 +335,14 @@ TRANSLATIONS = {
         "log_action_dashes": "--- {action} ---",
         "language_menu_title": "Langue",
         "welcome_title": 'Bienvenue dans Gazette Drouot Watcher',
+        "welcome_h1": "Ce que fait cette application",
+        "welcome_h2": "Qui a créé ceci",
+        "welcome_h3": "À propos de l'invite Administrateur",
+        "welcome_h4": "La tâche planifiée",
+        "welcome_h5": "Vos paramètres et fichiers",
+        "welcome_h6": "Vérification des mises à jour",
+        "welcome_h7": "Rien ici n'est risqué",
+        "welcome_h8": "Si quelque chose semble anormal",
         "welcome_body": (
             "Cette application vérifie de temps en temps quelques pages du site gazette-drouot.com et "
             "affiche une petite notification dès qu'un nouvel article apparaît — cliquez sur la "
@@ -375,7 +390,6 @@ TRANSLATIONS = {
         "welcome_dismiss": 'Compris',
         "welcome_dont_show_again": 'Ne plus afficher ce message',
         "show_guide_checkbox": 'Afficher le guide de configuration au prochain démarrage',
-        "show_tray_icon_checkbox": "Afficher une icône dans la zone de notification (clic droit pour quitter complètement)",
     },
     "es": {
         "window_title_suffix": "panel de control",
@@ -507,6 +521,14 @@ TRANSLATIONS = {
         "log_action_dashes": "--- {action} ---",
         "language_menu_title": "Idioma",
         "welcome_title": 'Bienvenido a Gazette Drouot Watcher',
+        "welcome_h1": "Qué hace esta aplicación",
+        "welcome_h2": "Quién hizo esto",
+        "welcome_h3": "Sobre el aviso de Administrador",
+        "welcome_h4": "La tarea programada",
+        "welcome_h5": "Tu configuración y tus archivos",
+        "welcome_h6": "Comprobación de actualizaciones",
+        "welcome_h7": "Nada de esto es arriesgado",
+        "welcome_h8": "Si algo parece ir mal",
         "welcome_body": (
             "Esta aplicación revisa de vez en cuando algunas páginas de gazette-drouot.com y muestra una "
             "pequeña notificación cuando aparece algo nuevo — haga clic en la notificación para abrirlo en "
@@ -550,7 +572,6 @@ TRANSLATIONS = {
         "welcome_dismiss": 'Entendido',
         "welcome_dont_show_again": 'No volver a mostrar esto',
         "show_guide_checkbox": 'Mostrar la guía de configuración en el próximo inicio',
-        "show_tray_icon_checkbox": "Mostrar un icono en la bandeja (clic derecho para salir por completo)",
     },
     "de": {
         "window_title_suffix": "Bedienfeld",
@@ -682,6 +703,14 @@ TRANSLATIONS = {
         "log_action_dashes": "--- {action} ---",
         "language_menu_title": "Sprache",
         "welcome_title": 'Willkommen bei Gazette Drouot Watcher',
+        "welcome_h1": "Was diese App macht",
+        "welcome_h2": "Wer das gemacht hat",
+        "welcome_h3": "Zur Administrator-Aufforderung",
+        "welcome_h4": "Die geplante Aufgabe",
+        "welcome_h5": "Deine Einstellungen und Dateien",
+        "welcome_h6": "Update-Prüfung",
+        "welcome_h7": "Hier ist nichts riskant",
+        "welcome_h8": "Wenn etwas nicht stimmt",
         "welcome_body": (
             "Diese App prüft von Zeit zu Zeit ein paar Seiten auf gazette-drouot.com und zeigt eine kleine "
             "Benachrichtigung an, sobald etwas Neues erscheint — klicken Sie auf die Benachrichtigung, um "
@@ -727,7 +756,6 @@ TRANSLATIONS = {
         "welcome_dismiss": 'Verstanden',
         "welcome_dont_show_again": 'Nicht mehr anzeigen',
         "show_guide_checkbox": 'Einrichtungsleitfaden beim nächsten Start anzeigen',
-        "show_tray_icon_checkbox": "Ein Symbol im Infobereich anzeigen (Rechtsklick zum vollständigen Beenden)",
     },
     "pt": {
         "window_title_suffix": "painel de controlo",
@@ -859,6 +887,14 @@ TRANSLATIONS = {
         "log_action_dashes": "--- {action} ---",
         "language_menu_title": "Idioma",
         "welcome_title": 'Bem-vindo ao Gazette Drouot Watcher',
+        "welcome_h1": "O que este aplicativo faz",
+        "welcome_h2": "Quem fez isto",
+        "welcome_h3": "Sobre o aviso de Administrador",
+        "welcome_h4": "A tarefa agendada",
+        "welcome_h5": "Suas configurações e arquivos",
+        "welcome_h6": "Verificação de atualizações",
+        "welcome_h7": "Nada aqui é arriscado",
+        "welcome_h8": "Se algo parecer errado",
         "welcome_body": (
             "Esta aplicação verifica de vez em quando algumas páginas do gazette-drouot.com e mostra uma "
             "pequena notificação quando aparece algo novo — clique na notificação para a abrir no seu "
@@ -899,7 +935,6 @@ TRANSLATIONS = {
         "welcome_dismiss": 'Entendi',
         "welcome_dont_show_again": 'Não mostrar novamente',
         "show_guide_checkbox": 'Mostrar guia de configuração no próximo arranque',
-        "show_tray_icon_checkbox": "Mostrar um ícone na bandeja (clique com o botão direito para sair completamente)",
     },
     "ru": {
         "window_title_suffix": "панель управления",
@@ -1031,6 +1066,14 @@ TRANSLATIONS = {
         "log_action_dashes": "--- {action} ---",
         "language_menu_title": "Язык",
         "welcome_title": 'Добро пожаловать в Gazette Drouot Watcher',
+        "welcome_h1": "Что делает это приложение",
+        "welcome_h2": "Кто это сделал",
+        "welcome_h3": "О запросе прав администратора",
+        "welcome_h4": "Запланированная задача",
+        "welcome_h5": "Ваши настройки и файлы",
+        "welcome_h6": "Проверка обновлений",
+        "welcome_h7": "Здесь ничего не рискованно",
+        "welcome_h8": "Если что-то выглядит не так",
         "welcome_body": (
             "Это приложение время от времени проверяет несколько страниц на gazette-drouot.com и "
             "показывает небольшое уведомление, когда появляется что-то новое — щёлкните по уведомлению, "
@@ -1076,7 +1119,6 @@ TRANSLATIONS = {
         "welcome_dismiss": 'Понятно',
         "welcome_dont_show_again": 'Больше не показывать',
         "show_guide_checkbox": 'Показывать руководство по настройке при следующем запуске',
-        "show_tray_icon_checkbox": "Показывать значок в трее (правый клик, чтобы полностью выйти)",
     },
     "zh": {
         "window_title_suffix": "控制面板",
@@ -1199,6 +1241,14 @@ TRANSLATIONS = {
         "log_action_dashes": "--- {action} ---",
         "language_menu_title": "语言",
         "welcome_title": '欢迎使用 Gazette Drouot Watcher',
+        "welcome_h1": "这个应用是做什么的",
+        "welcome_h2": "开发者是谁",
+        "welcome_h3": "关于管理员提示",
+        "welcome_h4": "计划任务",
+        "welcome_h5": "你的设置和文件",
+        "welcome_h6": "检查更新",
+        "welcome_h7": "这里没有任何风险",
+        "welcome_h8": "如果出现异常",
         "welcome_body": (
             "这个程序会时不时检查 gazette-drouot.com 上的几个页面，一旦有新内容出现就会弹出一个小小的"
             "通知——点击通知即可在浏览器中打开它。就是这么简单。不需要一直开着这个窗口它也能正常"
@@ -1230,7 +1280,6 @@ TRANSLATIONS = {
         "welcome_dismiss": '知道了',
         "welcome_dont_show_again": '不再显示',
         "show_guide_checkbox": '下次启动时显示设置指南',
-        "show_tray_icon_checkbox": "显示系统托盘图标（右键单击可完全退出）",
     },
     "ja": {
         "window_title_suffix": "コントロールパネル",
@@ -1362,6 +1411,14 @@ TRANSLATIONS = {
         "log_action_dashes": "--- {action} ---",
         "language_menu_title": "言語",
         "welcome_title": 'Gazette Drouot Watcher へようこそ',
+        "welcome_h1": "このアプリでできること",
+        "welcome_h2": "誰が作ったか",
+        "welcome_h3": "管理者プロンプトについて",
+        "welcome_h4": "スケジュールされたタスク",
+        "welcome_h5": "設定とファイルについて",
+        "welcome_h6": "アップデートの確認",
+        "welcome_h7": "危険なことは何もありません",
+        "welcome_h8": "何かおかしいと感じたら",
         "welcome_body": (
             "このアプリは、gazette-drouot.com のいくつかのページを時々チェックし、新しい記事が見つか"
             "ると小さな通知を表示します——通知をクリックするとブラウザでその記事が開きます。それだけ"
@@ -1402,7 +1459,6 @@ TRANSLATIONS = {
         "welcome_dismiss": 'わかりました',
         "welcome_dont_show_again": '次回から表示しない',
         "show_guide_checkbox": '次回起動時にセットアップガイドを表示する',
-        "show_tray_icon_checkbox": "タスクトレイにアイコンを表示する（完全に終了するには右クリック）",
     },
     "hi": {
         "window_title_suffix": "नियंत्रण पैनल",
@@ -1532,6 +1588,14 @@ TRANSLATIONS = {
         "log_action_dashes": "--- {action} ---",
         "language_menu_title": "भाषा",
         "welcome_title": 'Gazette Drouot Watcher में आपका स्वागत है',
+        "welcome_h1": "यह ऐप क्या करता है",
+        "welcome_h2": "इसे किसने बनाया",
+        "welcome_h3": "व्यवस्थापक प्रॉम्प्ट के बारे में",
+        "welcome_h4": "अनुसूचित कार्य",
+        "welcome_h5": "आपकी सेटिंग्स और फ़ाइलें",
+        "welcome_h6": "अपडेट की जाँच",
+        "welcome_h7": "यहाँ कुछ भी जोखिम भरा नहीं है",
+        "welcome_h8": "अगर कुछ गलत लगे",
         "welcome_body": (
             "यह ऐप समय-समय पर gazette-drouot.com के कुछ पन्नों को जाँचता है और जब भी कुछ नया दिखाई देता "
             "है तो एक छोटी सी सूचना दिखाता है — सूचना पर क्लिक करके उसे अपने ब्राउज़र में खोलें। बस इतना "
@@ -1572,7 +1636,6 @@ TRANSLATIONS = {
         "welcome_dismiss": 'समझ गया',
         "welcome_dont_show_again": 'यह दोबारा न दिखाएं',
         "show_guide_checkbox": 'अगली बार शुरू होने पर सेटअप गाइड दिखाएं',
-        "show_tray_icon_checkbox": "ट्रे आइकन दिखाएं (पूरी तरह बंद करने के लिए राइट-क्लिक करें)",
     },
     "ar": {
         "window_title_suffix": "لوحة التحكم",
@@ -1702,6 +1765,14 @@ TRANSLATIONS = {
         "log_action_dashes": "--- {action} ---",
         "language_menu_title": "اللغة",
         "welcome_title": 'مرحبًا بك في Gazette Drouot Watcher',
+        "welcome_h1": "ما الذي يفعله هذا التطبيق",
+        "welcome_h2": "من صنع هذا",
+        "welcome_h3": "حول رسالة طلب صلاحيات المسؤول",
+        "welcome_h4": "المهمة المجدولة",
+        "welcome_h5": "إعداداتك وملفاتك",
+        "welcome_h6": "التحقق من التحديثات",
+        "welcome_h7": "لا شيء هنا يمثل خطورة",
+        "welcome_h8": "إذا بدا أن هناك خطأ ما",
         "welcome_body": (
             "يتحقق هذا التطبيق من بضع صفحات على gazette-drouot.com من وقت لآخر، ويظهر إشعارًا صغيرًا كلما "
             "ظهر شيء جديد — انقر على الإشعار لفتحه في متصفحك. هذا كل ما في الأمر. لست بحاجة لإبقاء هذه "
@@ -1738,7 +1809,6 @@ TRANSLATIONS = {
         "welcome_dismiss": 'فهمت',
         "welcome_dont_show_again": 'عدم إظهار هذا مرة أخرى',
         "show_guide_checkbox": 'إظهار دليل الإعداد عند بدء التشغيل التالي',
-        "show_tray_icon_checkbox": "إظهار أيقونة في شريط النظام (انقر بزر الفأرة الأيمن للخروج الكامل)",
     },
 }
 

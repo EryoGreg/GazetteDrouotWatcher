@@ -372,6 +372,7 @@ THEMES = {
         "log_fg": "#1a1a1a",
         "border": "#c9c9c9",
         "link_fg": "#0066cc",
+        "warning_fg": "#C0392B",
     },
     # Dracula palette (https://draculatheme.com) — Background/Foreground for
     # the base, Selection for input fields (visually distinct from the main
@@ -386,6 +387,7 @@ THEMES = {
         "log_fg": "#F8F8F2",
         "border": "#6272A4",
         "link_fg": "#8BE9FD",  # Dracula Cyan
+        "warning_fg": "#FF5555",  # Dracula Red
     },
 }
 
@@ -574,7 +576,6 @@ class App(tk.Tk):
         self.style.theme_use("clam")  # base theme that actually honors custom colors on Windows
 
         self._build_all()
-        self._apply_tray_icon_preference(_load_gui_prefs().get("show_tray_icon", False))
         self.after(150, self._maybe_show_first_run_guide)
 
     def _maybe_show_first_run_guide(self):
@@ -644,9 +645,14 @@ class App(tk.Tk):
             # on one line never quite kept up with translations of either.
             # Stacked, the button always gets its full natural width
             # regardless of how long the label's text ends up being.
+            # Red + bold (not just the grey/secondary Desc.TLabel style
+            # used elsewhere) so it's impossible to miss — this is the one
+            # thing in the whole guide that actually affects whether
+            # Settings changes reach the scheduled task.
+            self.style.configure("Warning.TLabel", background=c["bg"], foreground=c["warning_fg"], font=("Segoe UI", 9, "bold"))
             admin_row = ttk.Frame(frame)
             admin_row.pack(side="bottom", fill="x", pady=(0, 8))
-            ttk.Label(admin_row, text=self.t("guide_admin_note"), wraplength=600, style="Desc.TLabel").pack(
+            ttk.Label(admin_row, text=self.t("guide_admin_note"), wraplength=600, style="Warning.TLabel").pack(
                 anchor="w", fill="x"
             )
             ttk.Button(
@@ -654,7 +660,19 @@ class App(tk.Tk):
             ).pack(anchor="e", pady=(6, 0))
 
         body = scrolledtext.ScrolledText(frame, wrap="word", font=("Segoe UI", 10))
-        body.insert("1.0", self.t("welcome_body"))
+        body.tag_configure("h", font=("Segoe UI", 11, "bold"), spacing1=6, spacing3=4)
+        body.tag_configure("p", font=("Segoe UI", 10), spacing3=10)
+        # welcome_body is 8 "\n\n"-separated paragraphs (verified to match
+        # this across every language) with welcome_h1..welcome_h8 as their
+        # titles, kept as separate short keys rather than folding the
+        # titles into welcome_body itself — much less to re-translate
+        # correctly than re-editing 8 paragraphs of running prose in 9
+        # languages every time a title needs a tweak.
+        titles = [self.t(f"welcome_h{i}") for i in range(1, 9)]
+        paragraphs = self.t("welcome_body").split("\n\n")
+        for title, paragraph in zip(titles, paragraphs):
+            body.insert("end", title + "\n", "h")
+            body.insert("end", paragraph + "\n\n", "p")
         body.configure(state="disabled", bg=c["entry_bg"], fg=c["entry_fg"])
         body.pack(fill="both", expand=True)
 
@@ -976,19 +994,9 @@ class App(tk.Tk):
         ttk.Button(buttons_row, text=self.t("btn_uninstall"), command=self.on_uninstall, state=action_state).pack(
             side="left", padx=6
         )
-
-        # Off by default -- most people already have more tray icons than
-        # they know what to do with, so this is purely opt-in, as a
-        # reminder that the background checks are still running even with
-        # this window closed (closing it then just hides it to the tray;
-        # the tray icon's own "Exit" is what actually quits).
-        self.tray_icon_var = tk.BooleanVar(value=self._tray_icon is not None)
-        ttk.Checkbutton(
-            frame,
-            text=self.t("show_tray_icon_checkbox"),
-            variable=self.tray_icon_var,
-            command=lambda: self.on_toggle_tray_icon(self.tray_icon_var),
-        ).pack(anchor="w", pady=(8, 0))
+        # No tray icon toggle here for now -- the underlying TrayIcon /
+        # on_close() hide-to-tray plumbing (below) is left in place, just
+        # never turned on and with no GUI path to enable it.
 
     def _on_restart_as_admin_click(self):
         if _relaunch_as_admin():
@@ -1445,6 +1453,18 @@ class App(tk.Tk):
             messagebox.showerror(self.t("err_reset_failed_title"), self.t("err_reset_failed_body", error=e))
             return
         self.log(self.t("log_reset_settings"))
+
+        # Same reasoning as on_save_settings: if the task's already
+        # installed, re-sync it now (reset also changes
+        # POLL_INTERVAL_MINUTES back to the factory value) so the user
+        # doesn't have to separately click Save right after Reset for it
+        # to actually take effect. Preserves disabled state, and is
+        # skipped entirely if the task isn't installed at all.
+        if _get_task_status_code() != "not_installed":
+            self._run_action("action_task_sync", _do_sync_installed_task)
+            if not self.winfo_exists():
+                return
+
         self.load_settings()
         messagebox.showinfo(self.t("dlg_reset_done_title"), self.t("dlg_reset_done_body"))
 
