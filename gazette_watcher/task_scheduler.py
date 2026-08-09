@@ -18,6 +18,7 @@ can't represent "forever" directly and needed a 10-year duration as a
 stand-in.
 """
 
+import datetime
 import functools
 
 import win32com.client
@@ -25,7 +26,7 @@ import win32com.client
 TASK_NAME = "GazetteDrouotWatcher"
 
 _TASK_ACTION_EXEC = 0
-_TASK_TRIGGER_LOGON = 9
+_TASK_TRIGGER_TIME = 1
 _TASK_LOGON_INTERACTIVE_TOKEN = 3
 _TASK_CREATE_OR_UPDATE = 6
 _TASK_INSTANCES_IGNORE_NEW = 3
@@ -81,8 +82,24 @@ def _get_task_or_raise(root_folder):
 @_translate_errors
 def install_task(exe_path: str, arguments: str, working_dir: str, interval_minutes: int):
     """Registers (or re-registers, overwriting) the task: runs `exe_path
-    arguments` every interval_minutes, indefinitely, starting at logon,
-    while the user is logged in."""
+    arguments` once right away, then every interval_minutes indefinitely
+    after that — only while the installing user is logged in.
+
+    A time trigger with StartBoundary set a few seconds in the past (so
+    it's already "due" the instant registration completes) rather than a
+    logon trigger — a logon trigger only fires on the *next* logon, so
+    installing (or a Settings Save that re-registers this with a changed
+    interval) wouldn't actually run anything until the next time the user
+    signed in, which reads as the app doing nothing right after you set
+    it up. This runs immediately instead, then keeps repeating exactly
+    like the logon trigger did.
+
+    Passing userId="" to RegisterTaskDefinition below resolves to the
+    calling (installing) user, so this always runs as that one specific
+    user's session regardless of who else logs into the machine — a time
+    trigger has no logon-scoping concept to begin with, unlike the old
+    logon trigger, which Task Scheduler's UI displayed as "At log on of
+    any user" even though it could only ever actually run as this one."""
     scheduler = _connect()
     root_folder = scheduler.GetFolder("\\")
     task_def = scheduler.NewTask(0)
@@ -95,8 +112,10 @@ def install_task(exe_path: str, arguments: str, working_dir: str, interval_minut
     task_def.Settings.MultipleInstances = _TASK_INSTANCES_IGNORE_NEW
     task_def.Settings.ExecutionTimeLimit = "PT5M"
 
-    trigger = task_def.Triggers.Create(_TASK_TRIGGER_LOGON)
-    trigger.Id = "LogonTriggerRepeat"
+    trigger = task_def.Triggers.Create(_TASK_TRIGGER_TIME)
+    trigger.Id = "TimeTriggerRepeat"
+    start = datetime.datetime.now() - datetime.timedelta(seconds=5)
+    trigger.StartBoundary = start.strftime("%Y-%m-%dT%H:%M:%S")
     trigger.Repetition.Interval = f"PT{interval_minutes}M"
     trigger.Repetition.Duration = ""  # empty = repeat forever
     trigger.Repetition.StopAtDurationEnd = False
