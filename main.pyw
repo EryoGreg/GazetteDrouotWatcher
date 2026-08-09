@@ -655,8 +655,12 @@ class App(tk.Tk):
             ttk.Label(admin_row, text=self.t("guide_admin_note"), wraplength=600, style="Warning.TLabel").pack(
                 anchor="w", fill="x"
             )
+            self.style.configure("RestartAdmin.TButton", background=SAVE_BUTTON_DIRTY_BG, foreground=DIRTY_BUTTON_FG)
             ttk.Button(
-                admin_row, text=self.t("btn_restart_admin"), command=self._on_restart_as_admin_click
+                admin_row,
+                text=self.t("btn_restart_admin"),
+                command=self._on_restart_as_admin_click,
+                style="RestartAdmin.TButton",
             ).pack(anchor="e", pady=(6, 0))
 
         body = scrolledtext.ScrolledText(frame, wrap="word", font=("Segoe UI", 10))
@@ -983,8 +987,12 @@ class App(tk.Tk):
             note2 = ttk.Label(admin_row, text=self.t("guide_admin_note"), wraplength=560, style="Desc.TLabel")
             note2.pack(side="left", fill="x", expand=True)
             self._desc_labels.append(note2)
+            self.style.configure("RestartAdmin.TButton", background=SAVE_BUTTON_DIRTY_BG, foreground=DIRTY_BUTTON_FG)
             ttk.Button(
-                admin_row, text=self.t("btn_restart_admin"), command=self._on_restart_as_admin_click
+                admin_row,
+                text=self.t("btn_restart_admin"),
+                command=self._on_restart_as_admin_click,
+                style="RestartAdmin.TButton",
             ).pack(side="right", padx=(8, 0))
 
         buttons_row = ttk.Frame(frame)
