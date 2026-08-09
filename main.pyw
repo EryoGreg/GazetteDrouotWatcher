@@ -57,6 +57,19 @@ sys.path.insert(0, str(PROJECT_DIR))
 CONFIG_PATH = PROJECT_DIR / "gazette_watcher" / "config.py"
 ICON_PATH = PROJECT_DIR / "icon.ico"
 
+if not CONFIG_PATH.exists():
+    # A truly standalone exe: dropped into any folder with nothing else
+    # alongside it, this recreates config.py (with its comments intact)
+    # from an embedded factory-default template instead of requiring the
+    # user to have the file pre-staged — previously this just crashed on
+    # launch. gazette_watcher/task_scheduler.py etc. are real code and stay
+    # bundled inside the exe as normal; only config.py needs to exist
+    # externally, since it's meant to be genuinely user-editable data.
+    import default_config_template
+
+    CONFIG_PATH.parent.mkdir(parents=True, exist_ok=True)
+    CONFIG_PATH.write_text(default_config_template.DEFAULT_CONFIG_SOURCE, encoding="utf-8")
+
 if getattr(sys, "frozen", False):
     # config.py is meant to be user-editable data, not baked-in code — but
     # PyInstaller bundles the whole gazette_watcher package into the exe,
