@@ -20,18 +20,15 @@ again in the control panel (or re-running with --watch's caller) to
 re-register the Windows Task Scheduler job with the new interval.
 """
 
-import sys
+import os
 from pathlib import Path
 
-# When packaged into a standalone .exe (PyInstaller), __file__ points into a
-# temporary extraction folder, not where the .exe actually sits — use the
-# .exe's own location instead in that case, same reasoning as main.pyw's
-# PROJECT_DIR. Without this, a frozen exe's state/logs go into that
-# temp folder and vanish when it exits, instead of into the real project dir.
-if getattr(sys, "frozen", False):
-    BASE_DIR = Path(sys.executable).resolve().parent
-else:
-    BASE_DIR = Path(__file__).resolve().parent.parent
+# Everything the app writes (this file, gui_prefs.json, state/, logs/) lives
+# under one shared %LOCALAPPDATA%/GazetteDrouotWatcher folder, regardless of
+# where the .exe itself is run from — so a copy of the .exe dropped into any
+# folder never scatters files there, and nothing depends on the exe's own
+# location (unlike __file__/sys.executable, which move if the exe does).
+BASE_DIR = Path(os.environ["LOCALAPPDATA"]) / "GazetteDrouotWatcher"
 STATE_DIR = BASE_DIR / "state"
 LOG_FILE = BASE_DIR / "logs" / "watcher.log"
 

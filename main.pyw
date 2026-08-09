@@ -33,10 +33,11 @@ pythonw.exe automatically, so no console window appears), or manually:
 
 import ast
 import ctypes
-import importlib
 import json
+import os
 import sys
 import tkinter as tk
+import types
 import webbrowser
 import winreg
 from pathlib import Path
@@ -44,9 +45,10 @@ from tkinter import messagebox, scrolledtext, ttk
 
 # When packaged into a standalone .exe (PyInstaller), __file__ points into a
 # temporary extraction folder, not where the .exe actually sits — use the
-# .exe's own location instead in that case. Either way, this file/exe is
-# expected to live directly in the project's root folder, next to
-# gazette_watcher/, etc.
+# .exe's own location instead in that case. This is still where the exe
+# itself lives (and where icon.ico is looked for in source mode) — but not
+# where user data (config.py, gui_prefs.json, state/, logs/) lives anymore,
+# see APPDATA_DIR below.
 if getattr(sys, "frozen", False):
     PROJECT_DIR = Path(sys.executable).resolve().parent
 else:
@@ -54,47 +56,96 @@ else:
 
 sys.path.insert(0, str(PROJECT_DIR))
 
-CONFIG_PATH = PROJECT_DIR / "gazette_watcher" / "config.py"
 ICON_PATH = PROJECT_DIR / "icon.ico"
 
+# All per-user, editable/generated data lives under %LOCALAPPDATA% instead
+# of next to the exe — a plain double-clickable .exe dropped into e.g.
+# Downloads used to scatter a gazette_watcher/ folder, gui_prefs.json,
+# state/ and logs/ right alongside itself, which reads as the exe "leaving
+# a mess" in whatever folder it's run from. This is also what
+# gazette_watcher/config.py (and the embedded default_config_template.py)
+# use for STATE_DIR/LOG_FILE, so everything the app writes ends up under
+# this one folder regardless of where the exe itself sits.
+APPDATA_DIR = Path(os.environ["LOCALAPPDATA"]) / "GazetteDrouotWatcher"
+APPDATA_DIR.mkdir(parents=True, exist_ok=True)
+
+CONFIG_PATH = APPDATA_DIR / "config.py"
+
 if not CONFIG_PATH.exists():
-    # A truly standalone exe: dropped into any folder with nothing else
-    # alongside it, this recreates config.py (with its comments intact)
-    # from an embedded factory-default template instead of requiring the
-    # user to have the file pre-staged — previously this just crashed on
-    # launch. gazette_watcher/task_scheduler.py etc. are real code and stay
-    # bundled inside the exe as normal; only config.py needs to exist
-    # externally, since it's meant to be genuinely user-editable data.
-    import default_config_template
+    # Older builds kept config.py in gazette_watcher/config.py next to the
+    # exe — if one's sitting there with the user's actual customized
+    # settings, carry it over instead of silently replacing it with
+    # factory defaults.
+    _legacy_config = PROJECT_DIR / "gazette_watcher" / "config.py"
+    if _legacy_config.exists():
+        CONFIG_PATH.write_text(_legacy_config.read_text(encoding="utf-8"), encoding="utf-8")
+    else:
+        # A truly standalone exe: dropped into any folder with nothing else
+        # alongside it, this recreates config.py (with its comments intact)
+        # from an embedded factory-default template instead of requiring the
+        # user to have the file pre-staged — previously this just crashed on
+        # launch. gazette_watcher/task_scheduler.py etc. are real code and
+        # stay bundled inside the exe as normal; only config.py needs to
+        # exist externally, since it's meant to be genuinely user-editable
+        # data.
+        import default_config_template
 
-    CONFIG_PATH.parent.mkdir(parents=True, exist_ok=True)
-    CONFIG_PATH.write_text(default_config_template.DEFAULT_CONFIG_SOURCE, encoding="utf-8")
+        CONFIG_PATH.write_text(default_config_template.DEFAULT_CONFIG_SOURCE, encoding="utf-8")
 
-if getattr(sys, "frozen", False):
-    # config.py is meant to be user-editable data, not baked-in code — but
-    # PyInstaller bundles the whole gazette_watcher package into the exe,
-    # and its import hook (in sys.meta_path) intercepts plain
-    # `import gazette_watcher.config` before Python's normal file-based
-    # import ever looks at the real, editable file sitting next to the
-    # exe. Without this, every read (including the actual scheduled
-    # --watch runs, not just the GUI) silently used whatever config.py
-    # looked like at build time — edits saved through Settings, or made
-    # by hand, were completely invisible to the running exe.
-    #
-    # Loading it explicitly by file path and registering it in
-    # sys.modules BEFORE anything else imports gazette_watcher.config
-    # makes every `from . import config` / `from gazette_watcher import
-    # config` elsewhere resolve to this real, on-disk, always-reloadable
-    # version instead.
-    import importlib.util
 
+def _load_live_config():
+    """Reads gazette_watcher/config.py's current on-disk content fresh, on
+    every call, by exec()'ing its source directly into a new module object
+    — not via importlib (import_module/reload, or even
+    spec_from_file_location's default loader), because both of those go
+    through Python's normal module machinery, and that machinery works
+    against us here in two separate ways:
+
+    1. In a frozen exe, PyInstaller bundles its own build-time copy of
+       gazette_watcher.config *inside* the exe. importlib.reload() doesn't
+       re-run the loader/spec a module already has — it re-resolves the
+       module by name through the normal import system, which finds that
+       baked-in copy instead of the real external file. Every Settings
+       Save appeared to work (the file was written correctly) but the
+       very next read silently went back to stale, build-time values.
+    2. Even spec_from_file_location's default loader writes/reads a
+       __pycache__/*.pyc for the file it loads. Save immediately followed
+       by a reload can land inside the same mtime tick, so the cache
+       doesn't look stale yet and a just-written change can momentarily
+       reload as the previous value.
+
+    A plain exec() has no module-resolution step and never touches
+    __pycache__, so neither failure mode applies — it always reflects
+    exactly what's on disk right now. This same function is also what the
+    frozen-startup block below calls, so every read (GUI or --watch) goes
+    through this one path.
+    """
+    source = CONFIG_PATH.read_text(encoding="utf-8")
+    module = types.ModuleType("gazette_watcher.config")
+    module.__file__ = str(CONFIG_PATH)
+    exec(compile(source, str(CONFIG_PATH), "exec"), module.__dict__)
+    sys.modules["gazette_watcher.config"] = module
     import gazette_watcher
 
-    _spec = importlib.util.spec_from_file_location("gazette_watcher.config", str(CONFIG_PATH))
-    _config_module = importlib.util.module_from_spec(_spec)
-    _spec.loader.exec_module(_config_module)
-    sys.modules["gazette_watcher.config"] = _config_module
-    gazette_watcher.config = _config_module
+    gazette_watcher.config = module
+    return module
+
+
+# config.py now lives under APPDATA_DIR, not inside the gazette_watcher/
+# package folder — so plain `import gazette_watcher.config` /
+# `from . import config` (used by scraper.py, notifier.py, watcher.py, ...)
+# would no longer find it there at all. In a frozen exe it's worse than a
+# plain miss: PyInstaller bundles its own build-time gazette_watcher/config.py
+# inside the exe, so a normal import would silently resolve to *that* baked-in
+# copy instead of erroring — meaning every edit made through Settings (or by
+# hand) would be completely invisible to the running exe.
+#
+# Registering it in sys.modules BEFORE anything else imports
+# gazette_watcher.config makes every such import elsewhere resolve to this
+# real, on-disk, APPDATA_DIR version instead — in both frozen and source-run
+# mode, since the package-relative file is never the live copy in either case
+# anymore.
+_load_live_config()
 
 import flags
 import i18n
@@ -103,8 +154,13 @@ from gazette_watcher import task_scheduler as ts
 TASK_NAME = ts.TASK_NAME
 
 # Small per-machine GUI preferences (theme + language choice) — not app
-# behavior, so kept separate from gazette_watcher/config.py.
-GUI_PREFS_PATH = PROJECT_DIR / "gui_prefs.json"
+# behavior, so kept separate from gazette_watcher/config.py. Same
+# next-to-the-exe -> AppData migration as CONFIG_PATH above.
+GUI_PREFS_PATH = APPDATA_DIR / "gui_prefs.json"
+if not GUI_PREFS_PATH.exists():
+    _legacy_prefs = PROJECT_DIR / "gui_prefs.json"
+    if _legacy_prefs.exists():
+        GUI_PREFS_PATH.write_text(_legacy_prefs.read_text(encoding="utf-8"), encoding="utf-8")
 
 AUTHOR = "Grégoire Pessiot"
 AUTHOR_URL = "https://github.com/EryoGreg?tab=repositories"
@@ -184,15 +240,6 @@ def patch_config(source: str, updates: dict[str, str]) -> str:
     for start, end, name in targets:
         lines[start - 1 : end] = [f"{name} = {updates[name]}\n"]
     return "".join(lines)
-
-
-def _load_live_config():
-    """Imports (or re-imports) gazette_watcher.config fresh, to read its
-    current actual values — simplest, most robust way to read the file's
-    current state (the patcher above is only used for writing)."""
-    if "gazette_watcher.config" in sys.modules:
-        return importlib.reload(sys.modules["gazette_watcher.config"])
-    return importlib.import_module("gazette_watcher.config")
 
 
 # ---------------------------------------------------------------------------
