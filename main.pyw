@@ -530,7 +530,7 @@ class App(tk.Tk):
             x, y, w, h = restored
             self.geometry(f"{w}x{h}+{x}+{y}")
         else:
-            w, h = 760, 780
+            w, h = 836, 858  # 760x780 default, +10% both dimensions
             sw, sh = _primary_screen_size()
             x = max(0, (sw - w) // 2)
             y = max(0, (sh - h) // 2)
@@ -572,7 +572,7 @@ class App(tk.Tk):
         # Center over the main window (standard modal-dialog behavior) —
         # by this point the main window is itself already centered on the
         # primary monitor, so this lands near screen-center too.
-        w, h = 520, 420
+        w, h = 676, 420  # 520 width +30% -- the restart-as-admin button was getting clipped
         px, py = self.winfo_x(), self.winfo_y()
         pw, ph = self.winfo_width(), self.winfo_height()
         x = px + max(0, (pw - w) // 2)
@@ -616,7 +616,7 @@ class App(tk.Tk):
         if not _is_admin():
             admin_row = ttk.Frame(frame)
             admin_row.pack(side="bottom", fill="x", pady=(0, 8))
-            ttk.Label(admin_row, text=self.t("guide_admin_note"), wraplength=420, style="Desc.TLabel").pack(
+            ttk.Label(admin_row, text=self.t("guide_admin_note"), wraplength=520, style="Desc.TLabel").pack(
                 side="left", fill="x", expand=True
             )
             ttk.Button(admin_row, text=self.t("btn_restart_admin"), command=self._on_restart_as_admin_click).pack(
