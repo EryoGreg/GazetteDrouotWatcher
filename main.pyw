@@ -378,6 +378,7 @@ THEMES = {
         "warning_fg": "#DC2626",
         "accent_active": "#4338CA",  # pressed/hover shade of link_fg, for filled Primary.TButton
         "accent_fg": "#FFFFFF",  # text color on top of a link_fg-filled button
+        "disabled_fg": "#79808E",  # disabled BUTTON text -- desc_fg is too low-contrast for this
     },
     # Dracula palette (https://draculatheme.com) — Background/Foreground for
     # the base, Selection for input fields (visually distinct from the main
@@ -395,6 +396,9 @@ THEMES = {
         "warning_fg": "#FF5555",  # Dracula Red
         "accent_active": "#62D9F0",  # pressed/hover shade of link_fg, for filled Primary.TButton
         "accent_fg": "#282A36",  # dark text on top of the bright cyan-filled button, matches bg
+        "disabled_fg": "#9AA0C0",  # disabled BUTTON text -- desc_fg happens to equal border in
+        # this theme (#6272A4 == #6272A4), so a disabled Primary.TButton (background=border) with
+        # foreground=desc_fg rendered completely invisible text -- same color on same color.
     },
 }
 
@@ -873,7 +877,7 @@ class App(tk.Tk):
             "TButton",
             background=[("pressed", c["border"])],
             bordercolor=[("pressed", c["link_fg"]), ("active", c["link_fg"])],
-            foreground=[("disabled", c["desc_fg"])],
+            foreground=[("disabled", c["disabled_fg"])],
         )
         # Primary.TButton -- accent-filled, for the one main call-to-action
         # per section (Save, Install, Download update). Everything else
@@ -891,13 +895,20 @@ class App(tk.Tk):
         )
         self.style.map(
             "Primary.TButton",
+            # Disabled falls back to the exact same neutral look as a
+            # disabled plain TButton (entry_bg + disabled_fg), rather than
+            # trying to dim the accent fill itself -- that's what caused
+            # completely invisible text on the Install/Download update/Save
+            # buttons in dark mode: background=border and foreground=desc_fg
+            # happen to be the identical color there, so the text vanished
+            # into its own background.
             background=[
-                ("disabled", c["border"]),
+                ("disabled", c["entry_bg"]),
                 ("pressed", c["accent_active"]),
                 ("active", c["accent_active"]),
             ],
             bordercolor=[("disabled", c["border"]), ("pressed", c["accent_active"]), ("active", c["accent_active"])],
-            foreground=[("disabled", c["desc_fg"])],
+            foreground=[("disabled", c["disabled_fg"])],
         )
 
         self.style.configure(
