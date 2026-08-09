@@ -157,7 +157,41 @@ TRANSLATIONS = {
         "log_action_dashes": "--- {action} ---",
         "language_menu_title": "Language",
         "welcome_title": 'Welcome to Gazette Drouot Watcher',
-        "welcome_body": 'This first-run guide is a placeholder for now — real step-by-step content is coming in a future update. For the moment: click Install below to start watching for new articles, and check Settings if you want to customize anything.',
+        "welcome_body": (
+            "This app checks a few pages on gazette-drouot.com every so often and pops up a little "
+            "notification when something new appears — click the notification to open it in your "
+            "browser. That's it. You don't need to keep this window open for it to work.\n\n"
+            "This little tool was built by Grégoire Pessiot in his spare time, as a gift for a friend "
+            "who wanted to know about new pieces on Gazette Drouot without checking manually. The full "
+            "source code is public — https://github.com/EryoGreg/GazetteDrouotWatcher — so if you're "
+            "curious (or just want to make sure nothing shady is going on), you're welcome to look at "
+            "every line of it. Feel free to share this with anyone else who might find it useful.\n\n"
+            "You might see a note asking to \"restart as Administrator.\" This isn't anything to worry "
+            "about — it doesn't give the app more control over your computer, it's just what Windows "
+            "requires for a program to be allowed to schedule itself to run automatically. If you skip "
+            "it, the app still works, but you'll have to click Save again after restarting as "
+            "Administrator to install the periodic check.\n\n"
+            "Behind the scenes, this app uses a normal Windows feature called Task Scheduler to check "
+            "for new articles every so often, even when this window is closed. You're always in "
+            "control of it — click \"Uninstall\" in this window any time to remove it completely, or "
+            "use \"Disable\" to pause it without deleting anything. Nothing bad happens if you do "
+            "either; the app simply stops checking until you turn it back on.\n\n"
+            "This app keeps its settings and history in one folder on your computer, which it creates "
+            "by itself — you never need to touch it. If you ever want to fully remove everything (for "
+            "example, before uninstalling), you can safely delete that folder; the app will just "
+            "recreate it with default settings the next time you open it. Nothing important lives "
+            "anywhere else.\n\n"
+            "This app can also tell you if a newer version exists — it checks automatically each time "
+            "you open it, but never downloads or installs anything by itself. If an update shows up "
+            "and you want it, just click the button that appears; if you'd rather stay on this "
+            "version, ignore it — nothing changes unless you choose to.\n\n"
+            "Nothing here is permanent or risky: every setting has a \"Reset to defaults\" button, "
+            "every action can be undone, and deleting any file this app created just means it starts "
+            "fresh next time. Feel free to click around.\n\n"
+            "If anything looks confusing or something stops working, the app keeps a log file that "
+            "usually explains what happened in plain terms — there's an \"Open log file\" button for "
+            "it in the main window. Or just uninstall and reinstall; nothing important will be lost."
+        ),
         "welcome_dismiss": 'Got it',
         "welcome_dont_show_again": "Don't show this again",
         "show_guide_checkbox": 'Show setup guide on next start',
@@ -294,7 +328,50 @@ TRANSLATIONS = {
         "log_action_dashes": "--- {action} ---",
         "language_menu_title": "Langue",
         "welcome_title": 'Bienvenue dans Gazette Drouot Watcher',
-        "welcome_body": "Ce guide de premier lancement est provisoire pour l'instant — un contenu détaillé étape par étape arrivera dans une future mise à jour. Pour le moment : cliquez sur Installer ci-dessous pour commencer à surveiller les nouveaux articles, et consultez les Paramètres si vous voulez personnaliser quelque chose.",
+        "welcome_body": (
+            "Cette application vérifie de temps en temps quelques pages du site gazette-drouot.com et "
+            "affiche une petite notification dès qu'un nouvel article apparaît — cliquez sur la "
+            "notification pour l'ouvrir dans votre navigateur. C'est tout. Vous n'avez pas besoin de "
+            "garder cette fenêtre ouverte pour que ça fonctionne.\n\n"
+            "Ce petit outil a été créé par Grégoire Pessiot sur son temps libre, comme cadeau pour un "
+            "ami qui voulait être informé des nouvelles pièces sur Gazette Drouot sans avoir à vérifier "
+            "lui-même. Le code source complet est public — https://github.com/EryoGreg/GazetteDrouotWatcher "
+            "— donc si vous êtes curieux (ou si vous voulez simplement vous assurer qu'il n'y a rien de "
+            "louche), vous êtes libre de consulter chaque ligne. N'hésitez pas à partager ceci avec "
+            "quiconque pourrait le trouver utile.\n\n"
+            "Il se peut que vous voyiez un message demandant de « Redémarrer en tant qu'administrateur ». "
+            "Il n'y a rien d'inquiétant là-dedans — cela ne donne pas plus de contrôle à l'application sur "
+            "votre ordinateur, c'est simplement ce que Windows exige pour qu'un programme soit autorisé à "
+            "se programmer lui-même pour s'exécuter automatiquement. Si vous ignorez cette étape, "
+            "l'application fonctionne quand même, mais vous devrez cliquer de nouveau sur Enregistrer "
+            "après avoir redémarré en tant qu'administrateur pour installer la vérification périodique.\n\n"
+            "En coulisses, cette application utilise une fonctionnalité normale de Windows appelée le "
+            "Planificateur de tâches pour vérifier régulièrement l'apparition de nouveaux articles, même "
+            "lorsque cette fenêtre est fermée. Vous en gardez toujours le contrôle — cliquez sur "
+            "« Désinstaller » dans cette fenêtre à tout moment pour la supprimer complètement, ou utilisez "
+            "« Désactiver » pour la mettre en pause sans rien supprimer. Rien de fâcheux ne se produit dans "
+            "un cas comme dans l'autre ; l'application arrête simplement de vérifier jusqu'à ce que vous la "
+            "réactiviez.\n\n"
+            "Cette application conserve ses paramètres et son historique dans un seul dossier sur votre "
+            "ordinateur, qu'elle crée elle-même — vous n'avez jamais besoin d'y toucher. Si vous souhaitez "
+            "un jour tout supprimer complètement (par exemple avant une désinstallation), vous pouvez "
+            "supprimer ce dossier en toute sécurité ; l'application le recréera simplement avec les "
+            "paramètres par défaut la prochaine fois que vous l'ouvrirez. Rien d'important ne se trouve "
+            "ailleurs.\n\n"
+            "Cette application peut aussi vous signaler l'existence d'une nouvelle version — elle vérifie "
+            "automatiquement à chaque ouverture, mais ne télécharge ni n'installe jamais rien d'elle-même. "
+            "Si une mise à jour apparaît et que vous la souhaitez, cliquez simplement sur le bouton qui "
+            "s'affiche ; si vous préférez rester sur cette version, ignorez-le — rien ne change à moins que "
+            "vous ne le décidiez.\n\n"
+            "Rien ici n'est permanent ni risqué : chaque paramètre dispose d'un bouton « Réinitialiser aux "
+            "valeurs par défaut », chaque action peut être annulée, et supprimer un fichier créé par "
+            "l'application signifie simplement qu'elle repartira de zéro la prochaine fois. N'hésitez pas à "
+            "cliquer un peu partout.\n\n"
+            "Si quelque chose vous semble confus ou cesse de fonctionner, l'application conserve un "
+            "fichier journal qui explique généralement ce qui s'est passé en termes simples — un bouton "
+            "« Ouvrir le journal » se trouve dans la fenêtre principale pour y accéder. Ou bien "
+            "désinstallez puis réinstallez simplement l'application ; rien d'important ne sera perdu."
+        ),
         "welcome_dismiss": 'Compris',
         "welcome_dont_show_again": 'Ne plus afficher ce message',
         "show_guide_checkbox": 'Afficher le guide de configuration au prochain démarrage',
@@ -430,7 +507,46 @@ TRANSLATIONS = {
         "log_action_dashes": "--- {action} ---",
         "language_menu_title": "Idioma",
         "welcome_title": 'Bienvenido a Gazette Drouot Watcher',
-        "welcome_body": 'Esta guía de primer inicio es provisional por ahora — un contenido detallado paso a paso llegará en una futura actualización. Por ahora: haga clic en Instalar abajo para empezar a vigilar nuevos artículos, y revise Configuración si quiere personalizar algo.',
+        "welcome_body": (
+            "Esta aplicación revisa de vez en cuando algunas páginas de gazette-drouot.com y muestra una "
+            "pequeña notificación cuando aparece algo nuevo — haga clic en la notificación para abrirlo en "
+            "su navegador. Eso es todo. No hace falta mantener esta ventana abierta para que funcione.\n\n"
+            "Esta pequeña herramienta fue creada por Grégoire Pessiot en su tiempo libre, como un regalo "
+            "para un amigo que quería enterarse de las piezas nuevas en Gazette Drouot sin tener que "
+            "revisarlo manualmente. El código fuente completo es público — "
+            "https://github.com/EryoGreg/GazetteDrouotWatcher — así que si tiene curiosidad (o solo quiere "
+            "asegurarse de que no hay nada raro), puede revisar cada línea. Siéntase libre de compartir "
+            "esto con cualquiera que pueda encontrarlo útil.\n\n"
+            "Puede que vea un aviso pidiendo 'Reiniciar como administrador'. No es nada que deba "
+            "preocuparle — no le da a la aplicación más control sobre su ordenador, es simplemente lo que "
+            "Windows exige para que un programa pueda programarse a sí mismo para ejecutarse "
+            "automáticamente. Si lo omite, la aplicación sigue funcionando igual, pero tendrá que volver a "
+            "hacer clic en Guardar después de reiniciar como administrador para instalar la revisión "
+            "periódica.\n\n"
+            "Detrás de escena, esta aplicación usa una función normal de Windows llamada Programador de "
+            "tareas para revisar si hay artículos nuevos de vez en cuando, incluso cuando esta ventana está "
+            "cerrada. Usted siempre tiene el control — haga clic en 'Desinstalar' en esta ventana en "
+            "cualquier momento para eliminarla por completo, o use 'Desactivar' para pausarla sin borrar "
+            "nada. No pasa nada malo en ninguno de los dos casos; la aplicación simplemente deja de revisar "
+            "hasta que la vuelva a activar.\n\n"
+            "Esta aplicación guarda su configuración e historial en una sola carpeta de su ordenador, que "
+            "crea ella misma — nunca necesita tocarla. Si alguna vez quiere eliminar todo por completo (por "
+            "ejemplo, antes de desinstalar), puede borrar esa carpeta con total seguridad; la aplicación "
+            "simplemente la volverá a crear con la configuración predeterminada la próxima vez que la abra. "
+            "Nada importante vive en ningún otro lugar.\n\n"
+            "Esta aplicación también puede avisarle si existe una versión más nueva — lo comprueba "
+            "automáticamente cada vez que la abre, pero nunca descarga ni instala nada por sí sola. Si "
+            "aparece una actualización y la quiere, simplemente haga clic en el botón que aparece; si "
+            "prefiere quedarse con esta versión, ignórelo — nada cambia a menos que usted lo decida.\n\n"
+            "Nada aquí es permanente ni arriesgado: cada opción tiene un botón 'Restablecer valores "
+            "predeterminados', cada acción se puede deshacer, y borrar cualquier archivo que haya creado "
+            "esta aplicación solo significa que empezará de cero la próxima vez. Siéntase libre de explorar "
+            "sin miedo.\n\n"
+            "Si algo le resulta confuso o deja de funcionar, la aplicación guarda un archivo de registro "
+            "que normalmente explica lo ocurrido en términos sencillos — hay un botón 'Abrir archivo de "
+            "registro' para verlo en la ventana principal. O simplemente desinstale y vuelva a instalar; no "
+            "se perderá nada importante."
+        ),
         "welcome_dismiss": 'Entendido',
         "welcome_dont_show_again": 'No volver a mostrar esto',
         "show_guide_checkbox": 'Mostrar la guía de configuración en el próximo inicio',
@@ -566,7 +682,48 @@ TRANSLATIONS = {
         "log_action_dashes": "--- {action} ---",
         "language_menu_title": "Sprache",
         "welcome_title": 'Willkommen bei Gazette Drouot Watcher',
-        "welcome_body": 'Dieser Einstiegsleitfaden ist vorerst ein Platzhalter — detaillierte Schritt-für-Schritt-Inhalte folgen in einem zukünftigen Update. Fürs Erste: Klicken Sie unten auf Installieren, um mit der Überwachung neuer Artikel zu beginnen, und schauen Sie bei Bedarf in den Einstellungen vorbei.',
+        "welcome_body": (
+            "Diese App prüft von Zeit zu Zeit ein paar Seiten auf gazette-drouot.com und zeigt eine kleine "
+            "Benachrichtigung an, sobald etwas Neues erscheint — klicken Sie auf die Benachrichtigung, um "
+            "sie in Ihrem Browser zu öffnen. Das ist alles. Sie müssen dieses Fenster nicht geöffnet "
+            "lassen, damit es funktioniert.\n\n"
+            "Dieses kleine Tool wurde von Grégoire Pessiot in seiner Freizeit entwickelt, als Geschenk für "
+            "einen Freund, der über neue Stücke bei Gazette Drouot Bescheid wissen wollte, ohne selbst "
+            "nachzusehen. Der vollständige Quellcode ist öffentlich einsehbar — "
+            "https://github.com/EryoGreg/GazetteDrouotWatcher — falls Sie also neugierig sind (oder einfach "
+            "sichergehen möchten, dass nichts Zwielichtiges passiert), können Sie sich jede einzelne Zeile "
+            "ansehen. Teilen Sie dies gerne mit jedem, der es nützlich finden könnte.\n\n"
+            "Möglicherweise sehen Sie einen Hinweis, der Sie bittet, 'Als Administrator neu starten' "
+            "auszuwählen. Das ist nichts, worüber Sie sich Sorgen machen müssen — die App bekommt dadurch "
+            "keine zusätzliche Kontrolle über Ihren Computer, das verlangt einfach Windows, damit ein "
+            "Programm sich selbst so einplanen darf, dass es automatisch ausgeführt wird. Wenn Sie diesen "
+            "Schritt überspringen, funktioniert die App trotzdem, aber Sie müssen nach dem Neustart als "
+            "Administrator noch einmal auf Speichern klicken, um die regelmäßige Prüfung einzurichten.\n\n"
+            "Im Hintergrund nutzt diese App eine ganz normale Windows-Funktion namens Aufgabenplanung, um "
+            "von Zeit zu Zeit nach neuen Artikeln zu suchen, selbst wenn dieses Fenster geschlossen ist. Sie "
+            "haben jederzeit die volle Kontrolle darüber — klicken Sie jederzeit in diesem Fenster auf "
+            "'Deinstallieren', um sie vollständig zu entfernen, oder auf 'Deaktivieren', um sie zu "
+            "pausieren, ohne etwas zu löschen. In beiden Fällen passiert nichts Schlimmes; die App hört "
+            "einfach auf zu prüfen, bis Sie sie wieder einschalten.\n\n"
+            "Diese App speichert ihre Einstellungen und ihren Verlauf in einem einzigen Ordner auf Ihrem "
+            "Computer, den sie selbst anlegt — Sie müssen ihn nie anfassen. Wenn Sie irgendwann alles "
+            "vollständig entfernen möchten (zum Beispiel vor einer Deinstallation), können Sie diesen "
+            "Ordner bedenkenlos löschen; die App legt ihn beim nächsten Öffnen einfach mit den "
+            "Standardeinstellungen neu an. Nichts Wichtiges befindet sich irgendwo anders.\n\n"
+            "Diese App kann Ihnen auch mitteilen, wenn eine neuere Version verfügbar ist — sie prüft das "
+            "automatisch jedes Mal, wenn Sie sie öffnen, lädt aber nie von selbst etwas herunter oder "
+            "installiert etwas. Wenn ein Update erscheint und Sie es möchten, klicken Sie einfach auf den "
+            "angezeigten Button; wenn Sie lieber bei dieser Version bleiben möchten, ignorieren Sie es "
+            "einfach — es ändert sich nichts, außer Sie entscheiden sich dafür.\n\n"
+            "Hier ist nichts endgültig oder riskant: Jede Einstellung hat einen 'Auf Standardwerte "
+            "zurücksetzen'-Button, jede Aktion lässt sich rückgängig machen, und das Löschen einer von "
+            "dieser App erstellten Datei bedeutet nur, dass sie beim nächsten Mal wieder neu beginnt. "
+            "Klicken Sie ruhig herum.\n\n"
+            "Falls etwas verwirrend erscheint oder nicht mehr funktioniert, führt die App eine "
+            "Protokolldatei, die meist in einfachen Worten erklärt, was passiert ist — dafür gibt es im "
+            "Hauptfenster einen 'Protokolldatei öffnen'-Button. Oder deinstallieren und installieren Sie "
+            "die App einfach neu; nichts Wichtiges geht dabei verloren."
+        ),
         "welcome_dismiss": 'Verstanden',
         "welcome_dont_show_again": 'Nicht mehr anzeigen',
         "show_guide_checkbox": 'Einrichtungsleitfaden beim nächsten Start anzeigen',
@@ -702,7 +859,43 @@ TRANSLATIONS = {
         "log_action_dashes": "--- {action} ---",
         "language_menu_title": "Idioma",
         "welcome_title": 'Bem-vindo ao Gazette Drouot Watcher',
-        "welcome_body": 'Este guia de primeira execução é provisório por agora — conteúdo detalhado passo a passo chegará numa atualização futura. Por agora: clique em Instalar abaixo para começar a vigiar novos artigos, e veja as Definições se quiser personalizar algo.',
+        "welcome_body": (
+            "Esta aplicação verifica de vez em quando algumas páginas do gazette-drouot.com e mostra uma "
+            "pequena notificação quando aparece algo novo — clique na notificação para a abrir no seu "
+            "navegador. É só isso. Não precisa manter esta janela aberta para que funcione.\n\n"
+            "Esta pequena ferramenta foi criada por Grégoire Pessiot nos seus tempos livres, como presente "
+            "para um amigo que queria saber sobre peças novas na Gazette Drouot sem ter de verificar "
+            "manualmente. O código-fonte completo é público — https://github.com/EryoGreg/GazetteDrouotWatcher "
+            "— por isso, se tiver curiosidade (ou só quiser garantir que não há nada de suspeito), pode "
+            "consultar cada linha. Sinta-se à vontade para partilhar isto com quem possa achar útil.\n\n"
+            "Pode aparecer um aviso a pedir para 'Reiniciar como administrador'. Não há motivo para "
+            "preocupação — isso não dá à aplicação mais controlo sobre o seu computador, é apenas o que o "
+            "Windows exige para que um programa possa agendar-se a si próprio para correr automaticamente. "
+            "Se ignorar esse passo, a aplicação continua a funcionar, mas terá de clicar novamente em "
+            "Guardar depois de reiniciar como administrador para instalar a verificação periódica.\n\n"
+            "Nos bastidores, esta aplicação usa uma funcionalidade normal do Windows chamada Agendador de "
+            "Tarefas para verificar novos artigos de vez em quando, mesmo com esta janela fechada. Tem "
+            "sempre controlo total sobre isso — clique em 'Desinstalar' nesta janela a qualquer momento "
+            "para a remover por completo, ou use 'Desativar' para a pausar sem apagar nada. Não acontece "
+            "nada de mal em nenhum dos casos; a aplicação simplesmente deixa de verificar até a voltar a "
+            "ativar.\n\n"
+            "Esta aplicação guarda as suas definições e histórico numa única pasta no seu computador, que "
+            "ela própria cria — nunca precisa de lhe mexer. Se alguma vez quiser remover tudo por completo "
+            "(por exemplo, antes de desinstalar), pode apagar essa pasta com total segurança; a aplicação "
+            "simplesmente volta a criá-la com as definições padrão na próxima vez que a abrir. Nada de "
+            "importante está guardado em mais lado nenhum.\n\n"
+            "Esta aplicação também consegue avisá-lo se existir uma versão mais recente — verifica isso "
+            "automaticamente sempre que a abre, mas nunca descarrega nem instala nada por conta própria. Se "
+            "aparecer uma atualização e a quiser, basta clicar no botão que surge; se preferir ficar com "
+            "esta versão, ignore-o — nada muda a não ser que escolha mudar.\n\n"
+            "Nada aqui é permanente ou arriscado: cada definição tem um botão 'Repor predefinições', "
+            "qualquer ação pode ser desfeita, e apagar qualquer arquivo criado por esta aplicação só "
+            "significa que ela vai recomeçar do zero na próxima vez. Sinta-se à vontade para explorar sem "
+            "receio.\n\n"
+            "Se algo parecer confuso ou deixar de funcionar, a aplicação mantém um arquivo de log que "
+            "normalmente explica o que aconteceu em termos simples — há um botão 'Abrir arquivo de log' "
+            "para isso na janela principal. Ou então desinstale e reinstale; nada de importante se perde."
+        ),
         "welcome_dismiss": 'Entendi',
         "welcome_dont_show_again": 'Não mostrar novamente',
         "show_guide_checkbox": 'Mostrar guia de configuração no próximo arranque',
@@ -838,7 +1031,48 @@ TRANSLATIONS = {
         "log_action_dashes": "--- {action} ---",
         "language_menu_title": "Язык",
         "welcome_title": 'Добро пожаловать в Gazette Drouot Watcher',
-        "welcome_body": 'Это руководство для первого запуска пока является заглушкой — подробное пошаговое содержание появится в будущем обновлении. Пока что: нажмите «Установить» ниже, чтобы начать отслеживать новые статьи, и загляните в «Настройки», если хотите что-то настроить.',
+        "welcome_body": (
+            "Это приложение время от времени проверяет несколько страниц на gazette-drouot.com и "
+            "показывает небольшое уведомление, когда появляется что-то новое — щёлкните по уведомлению, "
+            "чтобы открыть статью в браузере. Вот и всё. Держать это окно открытым для работы приложения "
+            "не нужно.\n\n"
+            "Эта небольшая программа была создана Grégoire Pessiot в свободное время как подарок другу, "
+            "который хотел узнавать о новых лотах на Gazette Drouot, не проверяя сайт вручную. Полный "
+            "исходный код открыт — https://github.com/EryoGreg/GazetteDrouotWatcher — так что если вам "
+            "любопытно (или вы просто хотите убедиться, что ничего подозрительного не происходит), можете "
+            "посмотреть каждую строчку. Не стесняйтесь поделиться этим с кем угодно, кому это может "
+            "пригодиться.\n\n"
+            "Вы можете увидеть сообщение с просьбой «Перезапустить от имени администратора». Беспокоиться "
+            "не о чем — это не даёт приложению больше контроля над вашим компьютером, это просто "
+            "требование Windows, чтобы программа могла сама запланировать своё автоматическое выполнение. "
+            "Если вы пропустите этот шаг, приложение всё равно будет работать, но после перезапуска от "
+            "имени администратора нужно будет ещё раз нажать «Сохранить», чтобы установить периодическую "
+            "проверку.\n\n"
+            "За кулисами это приложение использует обычную функцию Windows под названием Планировщик "
+            "заданий, чтобы время от времени проверять новые статьи, даже когда это окно закрыто. Вы "
+            "всегда полностью контролируете это — в любой момент нажмите «Удалить» в этом окне, чтобы "
+            "полностью убрать приложение, или «Отключить», чтобы приостановить его, ничего не удаляя. В "
+            "обоих случаях ничего плохого не происходит; приложение просто перестаёт проверять сайт, пока "
+            "вы не включите его снова.\n\n"
+            "Это приложение хранит свои настройки и историю в одной папке на вашем компьютере, которую "
+            "оно создаёт само — трогать её вам никогда не придётся. Если когда-нибудь захотите полностью "
+            "всё удалить (например, перед удалением приложения), можно спокойно удалить эту папку; при "
+            "следующем открытии приложение просто создаст её заново со стандартными настройками. Больше "
+            "ничего важного нигде не хранится.\n\n"
+            "Это приложение может также сообщить, если вышла более новая версия — оно проверяет это "
+            "автоматически при каждом запуске, но никогда не скачивает и не устанавливает ничего само. "
+            "Если появится обновление и вы захотите его установить, просто нажмите появившуюся кнопку; "
+            "если предпочитаете остаться на текущей версии, просто не обращайте на неё внимания — ничего "
+            "не изменится, пока вы сами этого не выберете.\n\n"
+            "Здесь ничего не окончательно и не рискованно: у каждой настройки есть кнопка «Сбросить "
+            "настройки», любое действие можно отменить, а удаление любого файла, созданного этим "
+            "приложением, означает лишь то, что оно начнёт заново в следующий раз. Не бойтесь нажимать на "
+            "всё подряд.\n\n"
+            "Если что-то кажется непонятным или перестаёт работать, приложение ведёт файл журнала, "
+            "который обычно простыми словами объясняет, что произошло, — в главном окне есть для этого "
+            "кнопка «Открыть файл журнала». Или просто удалите и установите приложение заново — ничего "
+            "важного не потеряется."
+        ),
         "welcome_dismiss": 'Понятно',
         "welcome_dont_show_again": 'Больше не показывать',
         "show_guide_checkbox": 'Показывать руководство по настройке при следующем запуске',
@@ -965,7 +1199,34 @@ TRANSLATIONS = {
         "log_action_dashes": "--- {action} ---",
         "language_menu_title": "语言",
         "welcome_title": '欢迎使用 Gazette Drouot Watcher',
-        "welcome_body": '此首次运行指南目前只是一个占位符，详细的分步内容将在未来的更新中提供。现在，请点击下方的安装开始监控新文章，如果想自定义任何内容，请查看设置。',
+        "welcome_body": (
+            "这个程序会时不时检查 gazette-drouot.com 上的几个页面，一旦有新内容出现就会弹出一个小小的"
+            "通知——点击通知即可在浏览器中打开它。就是这么简单。不需要一直开着这个窗口它也能正常"
+            "工作。\n\n"
+            "这个小工具是 Grégoire Pessiot 在业余时间做的，是送给一位朋友的礼物，因为她想知道 "
+            "Gazette Drouot 上有没有新拍品，又不想每次都手动去查。完整源代码是公开的——"
+            "https://github.com/EryoGreg/GazetteDrouotWatcher——如果你好奇（或者只是想确认里面没有什么"
+            "见不得人的东西），欢迎查看每一行代码。也欢迎把它分享给任何可能用得上的人。\n\n"
+            "你可能会看到一条提示，要求“以管理员身份重新启动”。这没什么好担心的——它并不会让程序对"
+            "你的电脑拥有更多控制权，这只是 Windows 要求的：程序必须这样才能被允许自动定时运行。如果"
+            "你跳过这一步，程序仍然可以正常工作，只是在以管理员身份重新启动后，你需要再点一次“保存”"
+            "才能安装定时检查。\n\n"
+            "在后台，这个程序使用的是 Windows 自带的普通功能——任务计划程序——来时不时检查有没有新"
+            "文章，即使这个窗口关闭了也一样。你随时都能完全掌控它——随时点击这个窗口里的“卸载”即可"
+            "将它彻底删除，或者用“禁用”来暂停它而不删除任何东西。不管选哪个都不会有什么坏处；程序只"
+            "是停止检查，直到你重新打开它。\n\n"
+            "这个程序把设置和历史记录都保存在你电脑上的一个文件夹里，这个文件夹是它自己创建的——你"
+            "永远不需要去动它。如果哪天你想彻底清除所有内容（比如在卸载之前），可以放心删除那个文件"
+            "夹；程序下次打开时会用默认设置自动重新创建它。没有其他重要内容保存在别处。\n\n"
+            "这个程序还能告诉你有没有新版本——它每次打开时都会自动检查，但绝不会自己下载或安装任何"
+            "东西。如果出现更新并且你想要，只需点击出现的按钮；如果你更想留在当前版本，不理会它就"
+            "行——除非你自己选择，否则什么都不会变。\n\n"
+            "这里的一切都不是永久的，也没有风险：每个设置都有一个“恢复默认设置”按钮，每个操作都可以"
+            "撤销，删除这个程序创建的任何文件，也只是意味着它下次会重新开始。放心点来点去吧。\n\n"
+            "如果有什么看起来让人困惑，或者程序停止工作了，它会保留一份日志文件，通常用简单的话说明"
+            "发生了什么——主窗口里有一个“打开日志文件”按钮可以查看。或者干脆卸载后重新安装；不会丢"
+            "失任何重要内容。"
+        ),
         "welcome_dismiss": '知道了',
         "welcome_dont_show_again": '不再显示',
         "show_guide_checkbox": '下次启动时显示设置指南',
@@ -1101,7 +1362,43 @@ TRANSLATIONS = {
         "log_action_dashes": "--- {action} ---",
         "language_menu_title": "言語",
         "welcome_title": 'Gazette Drouot Watcher へようこそ',
-        "welcome_body": 'この初回起動ガイドは現時点では仮の内容です。詳しいステップバイステップの内容は今後のアップデートで提供される予定です。今のところは、下のインストールをクリックして新着記事の監視を開始し、カスタマイズしたい場合は設定をご確認ください。',
+        "welcome_body": (
+            "このアプリは、gazette-drouot.com のいくつかのページを時々チェックし、新しい記事が見つか"
+            "ると小さな通知を表示します——通知をクリックするとブラウザでその記事が開きます。それだけ"
+            "です。動作させるためにこのウィンドウを開いたままにしておく必要はありません。\n\n"
+            "この小さなツールは、Grégoire Pessiot が空き時間に作ったもので、Gazette Drouot の新しい出"
+            "品を自分で確認せずに知りたいという友人へのプレゼントとして生まれました。ソースコードはす"
+            "べて公開されています——https://github.com/EryoGreg/GazetteDrouotWatcher——気になる方"
+            "（あるいは、怪しいことをしていないか確かめたい方）は、すべてのコードを自由に見ていただけ"
+            "ます。役に立ちそうな人がいれば、ぜひこのアプリを教えてあげてください。\n\n"
+            "「管理者として再起動」を求めるメッセージが表示されることがあります。心配する必要はありま"
+            "せん——これはアプリがパソコンをより強く制御できるようになるという意味ではなく、プログラ"
+            "ムが自動的に実行されるよう自分自身をスケジュールするために Windows が求めているだけのも"
+            "のです。この手順を省略してもアプリは問題なく動作しますが、定期チェックを設定するには、管"
+            "理者として再起動した後にもう一度「保存」をクリックする必要があります。\n\n"
+            "裏側では、このアプリは Windows の標準機能である「タスク スケジューラ」を使って、このウィ"
+            "ンドウを閉じていても時々新しい記事をチェックしています。いつでも完全にコントロールできま"
+            "す——このウィンドウでいつでも「アンインストール」をクリックすれば完全に削除できますし、"
+            "「無効化」を使えば何も削除せずに一時停止できます。どちらを選んでも問題は起きません。アプ"
+            "リは再び有効にするまでチェックを止めるだけです。\n\n"
+            "このアプリは、設定と履歴をパソコン内の1つのフォルダーにまとめて保存しており、そのフォル"
+            "ダーはアプリ自身が作成します——触る必要は一切ありません。もしすべてを完全に削除したくなっ"
+            "たら（アンインストール前などに）、そのフォルダーを安全に削除して構いません。次に開いたと"
+            "きに、アプリが既定の設定で自動的に作り直します。それ以外の場所に重要なものは何もありませ"
+            "ん。\n\n"
+            "このアプリは、新しいバージョンが出ているかどうかも教えてくれます——開くたびに自動的に確"
+            "認しますが、自分で勝手に何かをダウンロードしたりインストールしたりすることはありません。"
+            "アップデートが見つかって欲しい場合は、表示されたボタンをクリックするだけです。今のバージ"
+            "ョンのままでよければ、無視して構いません——あなたが選ばない限り、何も変わりません。\n\n"
+            "ここでの操作はどれも取り返しがつかなくなったり、危険だったりすることはありません。どの設"
+            "定にも「既定値に戻す」ボタンがあり、どの操作も元に戻すことができ、このアプリが作成したフ"
+            "ァイルを削除しても、次回また最初からやり直すだけです。気軽にいろいろクリックしてみてくだ"
+            "さい。\n\n"
+            "何か分かりにくく感じたり、動かなくなったりした場合、このアプリは何が起きたかを普通の言葉"
+            "で説明するログファイルを残しています——メイン画面に「ログファイルを開く」ボタンがありま"
+            "す。あるいは、アンインストールしてから再インストールしても構いません。重要なものが失われ"
+            "ることはありません。"
+        ),
         "welcome_dismiss": 'わかりました',
         "welcome_dont_show_again": '次回から表示しない',
         "show_guide_checkbox": '次回起動時にセットアップガイドを表示する',
@@ -1235,7 +1532,43 @@ TRANSLATIONS = {
         "log_action_dashes": "--- {action} ---",
         "language_menu_title": "भाषा",
         "welcome_title": 'Gazette Drouot Watcher में आपका स्वागत है',
-        "welcome_body": 'यह पहली बार चलाने वाली गाइड फ़िलहाल एक प्लेसहोल्डर है — विस्तृत चरण-दर-चरण सामग्री भविष्य के अपडेट में आएगी। अभी के लिए: नए लेखों पर नज़र रखना शुरू करने के लिए नीचे इंस्टॉल करें पर क्लिक करें, और कुछ भी अनुकूलित करना हो तो सेटिंग्स देखें।',
+        "welcome_body": (
+            "यह ऐप समय-समय पर gazette-drouot.com के कुछ पन्नों को जाँचता है और जब भी कुछ नया दिखाई देता "
+            "है तो एक छोटी सी सूचना दिखाता है — सूचना पर क्लिक करके उसे अपने ब्राउज़र में खोलें। बस इतना "
+            "ही। इसे काम करने के लिए इस विंडो को खुला रखने की ज़रूरत नहीं है।\n\n"
+            "यह छोटा-सा टूल Grégoire Pessiot ने अपने खाली समय में, एक दोस्त के लिए तोहफे के तौर पर बनाया "
+            "था, जो बिना खुद बार-बार जाँचे Gazette Drouot पर आने वाली नई चीज़ों के बारे में जानना चाहता "
+            "था। इसका पूरा सोर्स कोड सार्वजनिक है — https://github.com/EryoGreg/GazetteDrouotWatcher — तो "
+            "अगर आपको जिज्ञासा है (या बस यह पक्का करना चाहते हैं कि कुछ भी गड़बड़ नहीं हो रहा), तो आप "
+            "इसकी हर लाइन देख सकते हैं। इसे किसी और के साथ भी बेझिझक साझा करें, जिसे यह उपयोगी लग सकता "
+            "है।\n\n"
+            "आपको 'व्यवस्थापक के रूप में पुनः आरंभ करें' जैसा कोई संदेश दिख सकता है। इससे चिंता करने की "
+            "कोई बात नहीं है — इससे ऐप को आपके कंप्यूटर पर ज़्यादा नियंत्रण नहीं मिल जाता, यह सिर्फ इसलिए "
+            "ज़रूरी है क्योंकि किसी प्रोग्राम को खुद-ब-खुद, नियमित रूप से चलने के लिए शेड्यूल करने की "
+            "अनुमति देने के लिए Windows को इसकी ज़रूरत होती है। अगर आप इसे छोड़ देते हैं, तो भी ऐप काम "
+            "करता रहेगा, लेकिन नियमित जाँच स्थापित करने के लिए आपको व्यवस्थापक के रूप में पुनः आरंभ करने "
+            "के बाद फिर से 'सहेजें' पर क्लिक करना होगा।\n\n"
+            "पर्दे के पीछे, यह ऐप Windows की एक सामान्य सुविधा — टास्क शेड्यूलर — का उपयोग करके समय-समय "
+            "पर नए लेखों की जाँच करता है, भले ही यह विंडो बंद हो। इस पर आपका हमेशा पूरा नियंत्रण रहता है "
+            "— इसे पूरी तरह हटाने के लिए कभी भी इस विंडो में 'अनइंस्टॉल करें' पर क्लिक करें, या बिना कुछ "
+            "हटाए इसे रोकने के लिए 'अक्षम करें' का उपयोग करें। दोनों में से किसी भी स्थिति में कुछ भी बुरा "
+            "नहीं होता; ऐप बस तब तक जाँच करना बंद कर देता है जब तक आप इसे दोबारा चालू न करें।\n\n"
+            "यह ऐप अपनी सेटिंग्स और इतिहास आपके कंप्यूटर के एक ही फ़ोल्डर में रखता है, जिसे यह खुद बनाता "
+            "है — आपको कभी उसे छूने की ज़रूरत नहीं है। अगर आप कभी सब कुछ पूरी तरह हटाना चाहें (जैसे कि "
+            "अनइंस्टॉल करने से पहले), तो आप उस फ़ोल्डर को बेझिझक हटा सकते हैं; अगली बार खोलने पर ऐप इसे "
+            "डिफ़ॉल्ट सेटिंग्स के साथ फिर से बना देगा। कोई भी ज़रूरी चीज़ कहीं और नहीं रहती।\n\n"
+            "यह ऐप आपको यह भी बता सकता है कि कोई नया वर्शन उपलब्ध है या नहीं — यह हर बार खोलने पर "
+            "अपने-आप जाँच करता है, लेकिन खुद से कभी कुछ डाउनलोड या इंस्टॉल नहीं करता। अगर कोई अपडेट "
+            "दिखाई दे और आप उसे चाहते हों, तो बस दिखने वाले बटन पर क्लिक करें; और अगर आप इसी वर्शन पर बने "
+            "रहना चाहते हैं, तो उसे नज़रअंदाज़ कर दें — जब तक आप खुद न चुनें, कुछ भी नहीं बदलेगा।\n\n"
+            "यहाँ कुछ भी स्थायी या जोखिम भरा नहीं है: हर सेटिंग में 'डिफ़ॉल्ट पर रीसेट करें' बटन है, हर "
+            "कार्य वापस लिया जा सकता है, और इस ऐप द्वारा बनाई गई किसी भी फ़ाइल को हटाने का मतलब बस इतना "
+            "है कि यह अगली बार फिर से शुरू हो जाएगा। बेझिझक इधर-उधर क्लिक करें।\n\n"
+            "अगर कुछ भ्रमित करने वाला लगे या काम करना बंद कर दे, तो यह ऐप एक लॉग फ़ाइल रखता है जो "
+            "आमतौर पर सामान्य शब्दों में बताती है कि क्या हुआ — इसके लिए मुख्य विंडो में 'लॉग फ़ाइल "
+            "खोलें' बटन मौजूद है। या फिर बस अनइंस्टॉल करके दोबारा इंस्टॉल कर लें; कोई भी ज़रूरी चीज़ नहीं "
+            "खोएगी।"
+        ),
         "welcome_dismiss": 'समझ गया',
         "welcome_dont_show_again": 'यह दोबारा न दिखाएं',
         "show_guide_checkbox": 'अगली बार शुरू होने पर सेटअप गाइड दिखाएं',
@@ -1369,7 +1702,39 @@ TRANSLATIONS = {
         "log_action_dashes": "--- {action} ---",
         "language_menu_title": "اللغة",
         "welcome_title": 'مرحبًا بك في Gazette Drouot Watcher',
-        "welcome_body": 'هذا الدليل الخاص بالتشغيل الأول هو نص مؤقت في الوقت الحالي — سيصل محتوى تفصيلي خطوة بخطوة في تحديث مستقبلي. في الوقت الحالي: انقر على تثبيت أدناه لبدء مراقبة المقالات الجديدة، وراجع الإعدادات إذا أردت تخصيص أي شيء.',
+        "welcome_body": (
+            "يتحقق هذا التطبيق من بضع صفحات على gazette-drouot.com من وقت لآخر، ويظهر إشعارًا صغيرًا كلما "
+            "ظهر شيء جديد — انقر على الإشعار لفتحه في متصفحك. هذا كل ما في الأمر. لست بحاجة لإبقاء هذه "
+            "النافذة مفتوحة حتى يعمل.\n\n"
+            "صُنعت هذه الأداة الصغيرة على يد Grégoire Pessiot في وقت فراغه، كهدية لصديق أراد معرفة القطع "
+            "الجديدة على Gazette Drouot دون الحاجة إلى التحقق يدويًا. الشيفرة المصدرية كاملة ومتاحة للعموم "
+            "— https://github.com/EryoGreg/GazetteDrouotWatcher — لذا إن كنت فضوليًا (أو تريد فقط التأكد "
+            "من عدم وجود أي شيء مريب)، فأنت مرحّب بك للاطلاع على كل سطر فيها. لا تتردد في مشاركة هذا مع "
+            "أي شخص آخر قد يجده مفيدًا.\n\n"
+            "قد تظهر لك رسالة تطلب 'إعادة التشغيل كمسؤول'. لا داعي للقلق بشأن هذا — فهذا لا يمنح التطبيق "
+            "تحكمًا أكبر في جهازك، بل هو فقط ما يتطلبه Windows حتى يُسمح لبرنامج ما بجدولة نفسه للعمل "
+            "تلقائيًا. إذا تخطيت هذه الخطوة، سيظل التطبيق يعمل، لكن سيتعين عليك النقر على 'حفظ' مرة أخرى "
+            "بعد إعادة التشغيل كمسؤول لتثبيت الفحص الدوري.\n\n"
+            "خلف الكواليس، يستخدم هذا التطبيق ميزة عادية في Windows تُسمى جدولة المهام للتحقق من المقالات "
+            "الجديدة من وقت لآخر، حتى عندما تكون هذه النافذة مغلقة. تبقى دائمًا متحكمًا فيه بالكامل — انقر "
+            "على 'إلغاء التثبيت' في هذه النافذة في أي وقت لإزالته تمامًا، أو استخدم 'تعطيل' لإيقافه مؤقتًا "
+            "دون حذف أي شيء. لا يحدث أي ضرر في أي من الحالتين؛ يتوقف التطبيق ببساطة عن التحقق إلى أن تُعيد "
+            "تفعيله.\n\n"
+            "يحتفظ هذا التطبيق بإعداداته وسجل نشاطه في مجلد واحد على جهازك، ينشئه بنفسه — لن تحتاج أبدًا "
+            "إلى لمسه. وإن أردت يومًا إزالة كل شيء تمامًا (مثلاً قبل إلغاء التثبيت)، يمكنك حذف ذلك المجلد "
+            "بأمان؛ سيقوم التطبيق ببساطة بإعادة إنشائه بالإعدادات الافتراضية في المرة القادمة التي تفتحه "
+            "فيها. لا يوجد أي شيء مهم في أي مكان آخر.\n\n"
+            "يمكن لهذا التطبيق أيضًا إعلامك في حال وجود إصدار أحدث — فهو يتحقق من ذلك تلقائيًا في كل مرة "
+            "تفتحه فيها، لكنه لا يقوم أبدًا بتنزيل أو تثبيت أي شيء من تلقاء نفسه. إذا ظهر تحديث وأردته، "
+            "فقط انقر على الزر الذي يظهر؛ وإن كنت تفضل البقاء على هذا الإصدار، تجاهله ببساطة — لن يتغير "
+            "شيء ما لم تختر ذلك بنفسك.\n\n"
+            "لا شيء هنا نهائي أو محفوف بالمخاطر: كل إعداد له زر 'إعادة التعيين إلى الإعدادات الافتراضية'، "
+            "ويمكن التراجع عن كل إجراء، وحذف أي ملف أنشأه هذا التطبيق يعني فقط أنه سيبدأ من جديد في المرة "
+            "القادمة. لا تتردد في النقر في كل مكان.\n\n"
+            "إذا بدا شيء ما محيّرًا أو توقف عن العمل، فإن التطبيق يحتفظ بملف سجل يشرح عادةً ما حدث بعبارات "
+            "بسيطة — يوجد زر 'فتح ملف السجل' لذلك في النافذة الرئيسية. أو ببساطة قم بإلغاء التثبيت وإعادة "
+            "التثبيت؛ لن يُفقد أي شيء مهم."
+        ),
         "welcome_dismiss": 'فهمت',
         "welcome_dont_show_again": 'عدم إظهار هذا مرة أخرى',
         "show_guide_checkbox": 'إظهار دليل الإعداد عند بدء التشغيل التالي',
