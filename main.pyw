@@ -294,6 +294,14 @@ THEMES = {
     },
 }
 
+# Unsaved-change indicator colors for settings rows — constant across both
+# themes (they're accent/status colors, not base palette) with dark text
+# that stays readable on either bright background.
+DIRTY_BG = "#FFB86C"  # Dracula Orange — row has an edit not yet saved
+DIRTY_FG = "#282A36"
+FLASH_BG = "#50FA7B"  # Dracula Green — briefly shown right after Save
+FLASH_FG = "#282A36"
+
 
 def _set_titlebar_theme(root: tk.Tk, dark: bool):
     """The window's own titlebar (icon/text/min-max-close buttons) is drawn
@@ -540,6 +548,13 @@ class App(tk.Tk):
         self.rubrique_rows: list[dict] = []  # each: {"frame":..., "key":Var, "label":Var, "url":Var}
         self._desc_labels: list[ttk.Label] = []  # "Desc.TLabel"-styled labels, re-themed on theme change
 
+        # Unsaved-change ("dirty") tracking for the orange/green row
+        # highlighting — see _apply_row_style, _is_field_dirty,
+        # _is_rubrique_dirty.
+        self._row_styles: dict[str, dict[str, str]] = {}  # SIMPLE_FIELDS name -> per-row ttk style names
+        self._baseline_simple: dict[str, object] = {}  # SIMPLE_FIELDS name -> last loaded/saved value
+        self._rubrique_row_counter = 0  # gives each rubrique row its own unique style names
+
         self.title(f"Gazette Drouot Watcher — {self.t('window_title_suffix')}")
 
         self._build_header()
@@ -690,6 +705,15 @@ class App(tk.Tk):
         # in _add_field_row (they're plain TLabel by default otherwise)
         for widget in getattr(self, "_desc_labels", []):
             widget.configure(style="Desc.TLabel")
+
+        # Settings rows use their own per-row styles (so each can be tinted
+        # orange/green independently), which the global "TFrame"/"TLabel"
+        # restyle above doesn't touch — reapply them here, recomputing
+        # dirty/clean per row so the highlight survives a theme switch.
+        for name, styles in getattr(self, "_row_styles", {}).items():
+            self._apply_row_style(styles, "dirty" if self._is_field_dirty(name) else "clean")
+        for entry in getattr(self, "rubrique_rows", []):
+            self._update_rubrique_row_style(entry)
 
         # ttk on Windows updates its style *database* immediately, but
         # doesn't always ask the compositor to actually repaint existing
@@ -847,27 +871,72 @@ class App(tk.Tk):
         rub_header = ttk.Frame(self.scroll_frame)
         rub_header.pack(fill="x", pady=(0, 4))
         ttk.Label(rub_header, text=self.t("pages_to_watch"), font=("Segoe UI", 10, "bold")).pack(side="left")
-        ttk.Button(rub_header, text=self.t("btn_add_page"), command=lambda: self._add_rubrique_row()).pack(
-            side="right"
-        )
+        ttk.Button(
+            rub_header, text=self.t("btn_add_page"), command=lambda: self._add_rubrique_row(is_new=True)
+        ).pack(side="right")
 
         self.rubriques_frame = ttk.Frame(self.scroll_frame)
         self.rubriques_frame.pack(fill="x")
 
+    # -- unsaved-change ("dirty") row highlighting ---------------------------
+    # Each settings row gets its own ttk style names (suffixed .TFrame/
+    # .TLabel/... so ttk reuses the matching built-in layout — same trick
+    # as the existing "Desc.TLabel" style) instead of the shared "TFrame"/
+    # "TLabel" styles, so it can be tinted independently of every other row.
+    def _apply_row_style(self, style_names: dict, state: str):
+        if state == "dirty":
+            bg, fg = DIRTY_BG, DIRTY_FG
+        elif state == "flash":
+            bg, fg = FLASH_BG, FLASH_FG
+        else:
+            c = THEMES[self.current_theme]
+            bg, fg = c["bg"], c["fg"]
+        self.style.configure(style_names["row"], background=bg)
+        if "label" in style_names:
+            self.style.configure(style_names["label"], background=bg, foreground=fg)
+        if "desc" in style_names:
+            self.style.configure(style_names["desc"], background=bg, foreground=fg)
+        if "checkbutton" in style_names:
+            self.style.configure(style_names["checkbutton"], background=bg, foreground=fg)
+
+    def _is_field_dirty(self, name: str) -> bool:
+        var, kind = self.field_vars[name]
+        baseline = self._baseline_simple.get(name)
+        current = bool(var.get()) if kind == "bool" else str(var.get())
+        return baseline is not None and current != baseline
+
+    def _on_field_dirty_check(self, name: str):
+        self._apply_row_style(self._row_styles[name], "dirty" if self._is_field_dirty(name) else "clean")
+
+    def _is_rubrique_dirty(self, entry: dict) -> bool:
+        current = (entry["key"].get(), entry["label"].get(), entry["url"].get())
+        return entry["is_new"] or current != entry["baseline"]
+
+    def _update_rubrique_row_style(self, entry: dict):
+        self._apply_row_style(entry["style"], "dirty" if self._is_rubrique_dirty(entry) else "clean")
+
     def _add_field_row(self, parent, name, label, desc, kind):
-        row = ttk.Frame(parent)
+        row_style = f"F{name}.TFrame"
+        label_style = f"F{name}.TLabel"
+        desc_style = f"F{name}Desc.TLabel"
+
+        row = ttk.Frame(parent, style=row_style)
         row.pack(fill="x", pady=4)
 
-        text_col = ttk.Frame(row)
+        text_col = ttk.Frame(row, style=row_style)
         text_col.pack(side="left", fill="x", expand=True)
-        ttk.Label(text_col, text=label, font=("Segoe UI", 9, "bold")).pack(anchor="w")
-        desc_label = ttk.Label(text_col, text=desc, wraplength=520, style="Desc.TLabel")
+        ttk.Label(text_col, text=label, font=("Segoe UI", 9, "bold"), style=label_style).pack(anchor="w")
+        desc_label = ttk.Label(text_col, text=desc, wraplength=520, style=desc_style)
         desc_label.pack(anchor="w")
         self._desc_labels.append(desc_label)
 
+        style_names = {"row": row_style, "label": label_style, "desc": desc_style}
+
         if kind == "bool":
             var = tk.BooleanVar()
-            ttk.Checkbutton(row, variable=var).pack(side="right", padx=4)
+            cb_style = f"F{name}.TCheckbutton"
+            ttk.Checkbutton(row, variable=var, style=cb_style).pack(side="right", padx=4)
+            style_names["checkbutton"] = cb_style
         elif kind == "int":
             var = tk.StringVar()
             ttk.Entry(row, textvariable=var, width=16, justify="right", validate="key", validatecommand=self._vcmd_int).pack(
@@ -883,23 +952,39 @@ class App(tk.Tk):
             ttk.Entry(row, textvariable=var, width=16, justify="right").pack(side="right", padx=4)
 
         self.field_vars[name] = (var, kind)
+        self._row_styles[name] = style_names
+        self._apply_row_style(style_names, "clean")
+        var.trace_add("write", lambda *_a, n=name: self._on_field_dirty_check(n))
 
-    def _add_rubrique_row(self, key="", label="", url=""):
-        row = ttk.Frame(self.rubriques_frame)
+    def _add_rubrique_row(self, key="", label="", url="", is_new=False):
+        idx = self._rubrique_row_counter
+        self._rubrique_row_counter += 1
+        row_style = f"Rub{idx}.TFrame"
+        label_style = f"Rub{idx}.TLabel"
+
+        row = ttk.Frame(self.rubriques_frame, style=row_style)
         row.pack(fill="x", pady=3)
 
         key_var = tk.StringVar(value=key)
         label_var = tk.StringVar(value=label)
         url_var = tk.StringVar(value=url)
 
-        ttk.Label(row, text=self.t("rubrique_key")).pack(side="left")
+        ttk.Label(row, text=self.t("rubrique_key"), style=label_style).pack(side="left")
         ttk.Entry(row, textvariable=key_var, width=16).pack(side="left", padx=(2, 8))
-        ttk.Label(row, text=self.t("rubrique_label")).pack(side="left")
+        ttk.Label(row, text=self.t("rubrique_label"), style=label_style).pack(side="left")
         ttk.Entry(row, textvariable=label_var, width=16).pack(side="left", padx=(2, 8))
-        ttk.Label(row, text=self.t("rubrique_url")).pack(side="left")
+        ttk.Label(row, text=self.t("rubrique_url"), style=label_style).pack(side="left")
         ttk.Entry(row, textvariable=url_var, width=32).pack(side="left", padx=(2, 8), fill="x", expand=True)
 
-        entry = {"frame": row, "key": key_var, "label": label_var, "url": url_var}
+        entry = {
+            "frame": row,
+            "key": key_var,
+            "label": label_var,
+            "url": url_var,
+            "baseline": (key, label, url),  # values as loaded — not yet-dirty reference point
+            "is_new": is_new,  # added via "+ Add page" this session, not yet saved at all
+            "style": {"row": row_style, "label": label_style},
+        }
 
         def remove():
             row.destroy()
@@ -908,6 +993,14 @@ class App(tk.Tk):
         ttk.Button(row, text="✕", width=3, command=remove).pack(side="left")
 
         self.rubrique_rows.append(entry)
+        self._update_rubrique_row_style(entry)
+
+        def _on_change(*_a, e=entry):
+            self._update_rubrique_row_style(e)
+
+        key_var.trace_add("write", _on_change)
+        label_var.trace_add("write", _on_change)
+        url_var.trace_add("write", _on_change)
 
     def _clear_rubrique_rows(self):
         for entry in self.rubrique_rows:
@@ -924,10 +1017,13 @@ class App(tk.Tk):
         for name, _label_key, _desc_key, kind in SIMPLE_FIELDS:
             var, _kind = self.field_vars[name]
             value = getattr(config, name)
-            if kind == "bool":
-                var.set(bool(value))
-            else:
-                var.set(str(value))
+            baseline_value = bool(value) if kind == "bool" else str(value)
+            # Baseline set before var.set() so the dirty-check trace it
+            # fires sees "matches baseline" and colors the row clean, not
+            # a stale/missing baseline that would read as dirty.
+            self._baseline_simple[name] = baseline_value
+            var.set(baseline_value)
+            self._apply_row_style(self._row_styles[name], "clean")
 
         self._clear_rubrique_rows()
         for r in config.RUBRIQUES:
@@ -979,6 +1075,16 @@ class App(tk.Tk):
         updates = self._collect_updates()
         if updates is None:
             return
+
+        # Snapshot which rows are orange (unsaved) *before* saving — after a
+        # successful save everything is clean by definition (baseline gets
+        # reset to what was just written), so this is the only point where
+        # we still know which rows to flash green. Rubrique rows are
+        # captured by position: load_settings() below rebuilds them in the
+        # same order they were just written in, so the indices still line up.
+        dirty_field_names = [name for name, *_ in SIMPLE_FIELDS if self._is_field_dirty(name)]
+        dirty_rubrique_indices = [i for i, e in enumerate(self.rubrique_rows) if self._is_rubrique_dirty(e)]
+
         try:
             source = CONFIG_PATH.read_text(encoding="utf-8")
             patched = patch_config(source, updates)
@@ -989,7 +1095,25 @@ class App(tk.Tk):
             return
         self.log(self.t("log_saved_settings"))
         self.load_settings()
+        self._flash_saved_rows(dirty_field_names, dirty_rubrique_indices)
         messagebox.showinfo(self.t("dlg_saved_title"), self.t("dlg_saved_body"))
+
+    def _flash_saved_rows(self, field_names: list[str], rubrique_indices: list[int]):
+        """Briefly turns just-saved rows green, then back to normal — the
+        visual confirmation that what was orange (unsaved) is now saved."""
+        flashed_styles = [self._row_styles[n] for n in field_names if n in self._row_styles]
+        for i in rubrique_indices:
+            if i < len(self.rubrique_rows):
+                flashed_styles.append(self.rubrique_rows[i]["style"])
+
+        for styles in flashed_styles:
+            self._apply_row_style(styles, "flash")
+
+        def revert():
+            for styles in flashed_styles:
+                self._apply_row_style(styles, "clean")
+
+        self.after(500, revert)
 
     def on_reset_defaults(self):
         if not messagebox.askyesno(self.t("dlg_reset_confirm_title"), self.t("dlg_reset_confirm_body")):
