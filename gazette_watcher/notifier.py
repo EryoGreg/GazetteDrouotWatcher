@@ -67,16 +67,41 @@ def _local_image_path(url: str) -> str | None:
         return None
 
 
+def _click_target(url: str) -> str:
+    """What a toast's on_click should actually be set to.
+
+    Normally the plain URL: Windows then opens it with whatever the user's
+    real default browser is, natively, with no process of ours involved.
+
+    Only if the user has explicitly picked a browser in Settings does this
+    wrap the URL in our own registered protocol, so the click comes back
+    through our exe (see browser_launch.py) and can be routed to that
+    specific browser. Anything going wrong here falls back to the plain
+    URL — a link opening in the wrong browser is a far better outcome than
+    a notification whose click does nothing at all."""
+    try:
+        chosen = getattr(config, "NOTIFICATION_BROWSER", "")
+        if not chosen:
+            return url
+        from browser_launch import LINK_PROTOCOL
+
+        return f"{LINK_PROTOCOL}:{url}"
+    except Exception:
+        log.exception("couldn't build custom click target, using the plain URL: %s", url)
+        return url
+
+
 def _notify_article(article: dict):
     """Shows one toast for one article. Clicking it opens the article's URL
-    in the user's default browser (handled natively by Windows via on_click)."""
+    in the user's default browser (handled natively by Windows via on_click),
+    or in a specific browser if one was chosen in Settings (see _click_target)."""
     body = f"Publié le {article['date']}" if article.get("date") else "Date de publication indisponible"
     if article.get("result"):
         body += f" — Résultat {article['result']}"
     if article.get("excerpt"):
         body += f"\n{article['excerpt']}"
 
-    kwargs = {"on_click": article["url"], "app_id": APP_ID}
+    kwargs = {"on_click": _click_target(article["url"]), "app_id": APP_ID}
     if article.get("image"):
         local_image = _local_image_path(article["image"])
         if local_image:
@@ -124,7 +149,7 @@ def notify_new_articles(new_articles: list[dict], rubrique_label: str, listing_u
         notify(
             f"{len(rest)} more new posts — {rubrique_label}",
             "Click to view the listing",
-            on_click=listing_url,
+            on_click=_click_target(listing_url),
             app_id=APP_ID,
         )
         log.info("notified summary: %d more articles on %s", len(rest), rubrique_label)

@@ -145,6 +145,15 @@ def _maybe_self_destruct_if_deleted() -> bool:
             ts.uninstall_task()
         except Exception:
             pass  # best-effort -- still proceed to wipe the folder either way
+        try:
+            # The link-handler protocol (if the user had picked a specific
+            # browser) points at the exe inside the folder about to be
+            # deleted -- leaving it registered would strand a dead handler.
+            import browser_launch
+
+            browser_launch.unregister_link_protocol()
+        except Exception:
+            pass
         shutil.rmtree(APPDATA_DIR, ignore_errors=True)
         return True
     except Exception:
@@ -231,6 +240,7 @@ def _load_live_config():
 # anymore.
 _load_live_config()
 
+import browser_launch
 import flags
 import i18n
 import tray_icon
@@ -271,6 +281,10 @@ SIMPLE_FIELDS = [
     ("ALERT_COOLDOWN_HOURS", "field_alert_cooldown_label", "field_alert_cooldown_desc", "float"),
     ("HEADLESS", "field_headless_label", "field_headless_desc", "bool"),
     ("BROWSER_CHANNEL", "field_browser_label", "field_browser_desc", "str"),
+    # "browser" renders a dropdown of installed browsers rather than a text
+    # box -- the stored value is an .exe path, which nobody should be
+    # typing by hand. Empty = use whatever Windows opens links with.
+    ("NOTIFICATION_BROWSER", "field_link_browser_label", "field_link_browser_desc", "browser"),
 ]
 
 # Factory defaults — what "Reset to defaults" restores. Mirrors what
@@ -297,6 +311,7 @@ DEFAULTS = {
     "ALERT_COOLDOWN_HOURS": 2,
     "HEADLESS": True,
     "BROWSER_CHANNEL": "msedge",
+    "NOTIFICATION_BROWSER": "",
     "RUBRIQUES": DEFAULT_RUBRIQUES,
 }
 
@@ -320,19 +335,35 @@ def _format_rubriques(rubriques: list[dict]) -> str:
 
 def patch_config(source: str, updates: dict[str, str]) -> str:
     """updates: {NAME: new_source_expression}. Replaces each top-level
-    `NAME = ...` assignment's value in place."""
+    `NAME = ...` assignment's value in place, and appends any setting that
+    isn't in the file at all yet.
+
+    That append matters for anyone upgrading: their config.py was written
+    by an older build and simply has no line for a setting added since, so
+    a replace-only patcher would silently drop it and the setting could
+    never be saved."""
     tree = ast.parse(source)
     lines = source.splitlines(keepends=True)
     targets = []
+    seen = set()
     for node in tree.body:
         if isinstance(node, ast.Assign) and len(node.targets) == 1 and isinstance(node.targets[0], ast.Name):
             name = node.targets[0].id
             if name in updates:
                 targets.append((node.lineno, node.end_lineno, name))
+                seen.add(name)
     # process bottom-to-top so earlier replacements don't shift later line numbers
     targets.sort(key=lambda t: t[0], reverse=True)
     for start, end, name in targets:
         lines[start - 1 : end] = [f"{name} = {updates[name]}\n"]
+
+    missing = [name for name in updates if name not in seen]
+    if missing:
+        if lines and not lines[-1].endswith("\n"):
+            lines.append("\n")
+        lines.append("\n")
+        for name in missing:
+            lines.append(f"{name} = {updates[name]}\n")
     return "".join(lines)
 
 
@@ -372,6 +403,41 @@ def _call_task_scheduler(fn, *args, **kwargs) -> tuple[bool, str]:
         return False, _PERMISSION_DENIED_SENTINEL
     except Exception as e:
         return False, str(e)
+
+
+def _link_handler_command() -> str:
+    """Quoted command that should receive a clicked notification link, in
+    the same frozen-vs-source shape as _resolve_scheduled_action. Frozen
+    uses the AppData cache rather than sys.executable so the handler keeps
+    working after the visible copy of the app is moved."""
+    if getattr(sys, "frozen", False):
+        return f'"{CACHED_EXE_PATH}"'
+    pythonw = sys.executable
+    if pythonw.lower().endswith("python.exe"):
+        candidate = pythonw[: -len("python.exe")] + "pythonw.exe"
+        if Path(candidate).exists():
+            pythonw = candidate
+    return f'"{pythonw}" "{Path(__file__).resolve()}"'
+
+
+def _sync_link_protocol():
+    """Registers our link-handling protocol only while the user actually has
+    a specific browser chosen, and removes it again the moment they go back
+    to the system default -- so the no-override path leaves nothing behind
+    in the registry at all. Called at GUI startup (to self-heal a stale
+    handler path) and after any settings write."""
+    try:
+        import browser_launch
+
+        chosen = getattr(_load_live_config(), "NOTIFICATION_BROWSER", "")
+        if chosen:
+            browser_launch.register_link_protocol(_link_handler_command())
+        else:
+            browser_launch.unregister_link_protocol()
+    except Exception:
+        # Never let this break startup or saving -- worst case links open
+        # in the system default browser, which is the normal behavior.
+        pass
 
 
 def _do_install() -> tuple[bool, str]:
@@ -1262,7 +1328,19 @@ class App(tk.Tk):
         self._run_action("btn_install", _do_install)
 
     def on_uninstall(self):
-        self._run_action("btn_uninstall", lambda: _call_task_scheduler(ts.uninstall_task))
+        def uninstall():
+            result = _call_task_scheduler(ts.uninstall_task)
+            try:
+                # Nothing left to click a notification into once the task is
+                # gone, so don't leave the protocol handler registered.
+                import browser_launch
+
+                browser_launch.unregister_link_protocol()
+            except Exception:
+                pass
+            return result
+
+        self._run_action("btn_uninstall", uninstall)
 
     def on_enable(self):
         self._run_action("btn_enable", lambda: _call_task_scheduler(ts.set_enabled, True))
@@ -1455,6 +1533,21 @@ class App(tk.Tk):
             ttk.Entry(
                 row, textvariable=var, width=16, justify="right", validate="key", validatecommand=self._vcmd_float
             ).pack(side="right", padx=4)
+        elif kind == "browser":
+            # Readonly so the value can only ever be one of the detected
+            # browsers (or the system default) -- the config stores an .exe
+            # path and a free-text box would just invite broken ones.
+            var = tk.StringVar()
+            self._browser_display_to_path = {self.t("browser_system_default"): ""}
+            for display, exe in browser_launch.detect_browsers():
+                self._browser_display_to_path[display] = exe
+            ttk.Combobox(
+                row,
+                textvariable=var,
+                values=list(self._browser_display_to_path),
+                state="readonly",
+                width=24,
+            ).pack(side="right", padx=4)
         else:
             var = tk.StringVar()
             ttk.Entry(row, textvariable=var, width=16, justify="right").pack(side="right", padx=4)
@@ -1526,8 +1619,21 @@ class App(tk.Tk):
 
         for name, _label_key, _desc_key, kind in SIMPLE_FIELDS:
             var, _kind = self.field_vars[name]
-            value = getattr(config, name)
-            baseline_value = bool(value) if kind == "bool" else str(value)
+            # getattr default: a config.py written by an older build has no
+            # line for a setting added since, and that's a normal upgrade
+            # state, not a corrupt file.
+            value = getattr(config, name, "" if kind == "browser" else None)
+            if kind == "browser":
+                # Stored as an .exe path; shown as the browser's name. An
+                # unknown path (browser uninstalled since, or hand-edited)
+                # falls back to showing the system-default entry.
+                baseline_value = self.t("browser_system_default")
+                for display, exe in getattr(self, "_browser_display_to_path", {}).items():
+                    if exe and str(value) and os.path.normcase(exe) == os.path.normcase(str(value)):
+                        baseline_value = display
+                        break
+            else:
+                baseline_value = bool(value) if kind == "bool" else str(value)
             # Baseline set before var.set() so the dirty-check trace it
             # fires sees "matches baseline" and colors the row clean, not
             # a stale/missing baseline that would read as dirty.
@@ -1556,6 +1662,10 @@ class App(tk.Tk):
                     value = self._parse_float(raw)
                 elif kind == "bool":
                     value = bool(raw)
+                elif kind == "browser":
+                    # Back from the displayed browser name to the .exe path
+                    # actually stored in config.py ("" = system default).
+                    value = getattr(self, "_browser_display_to_path", {}).get(raw, "")
                 else:
                     value = str(raw)
             except ValueError:
@@ -1604,6 +1714,7 @@ class App(tk.Tk):
             messagebox.showerror(self.t("err_save_failed_title"), self.t("err_save_failed_body", error=e))
             return
         self.log(self.t("log_saved_settings"))
+        _sync_link_protocol()
 
         # If the task is already installed, re-register it now so a changed
         # POLL_INTERVAL_MINUTES takes effect immediately instead of silently
@@ -1652,6 +1763,7 @@ class App(tk.Tk):
             messagebox.showerror(self.t("err_reset_failed_title"), self.t("err_reset_failed_body", error=e))
             return
         self.log(self.t("log_reset_settings"))
+        _sync_link_protocol()
 
         # Same reasoning as on_save_settings: if the task's already
         # installed, re-sync it now (reset also changes
@@ -1735,7 +1847,25 @@ class App(tk.Tk):
 
 
 if __name__ == "__main__":
-    if "--watch" in sys.argv:
+    if "--open-url" in sys.argv:
+        # Reached only via the gazettedrouotlink: protocol handler, i.e. the
+        # user clicked a notification while having explicitly chosen a
+        # browser in Settings. No GUI, no watcher — resolve the browser and
+        # hand the URL over. browser_launch.open_url refuses anything that
+        # isn't http/https, since a registered protocol handler is callable
+        # by anything on the machine.
+        import browser_launch
+
+        index = sys.argv.index("--open-url")
+        raw = sys.argv[index + 1] if index + 1 < len(sys.argv) else ""
+        chosen = ""
+        try:
+            chosen = getattr(_load_live_config(), "NOTIFICATION_BROWSER", "")
+        except Exception:
+            pass
+        if raw:
+            browser_launch.open_url(raw, chosen or None)
+    elif "--watch" in sys.argv:
         # This is what Task Scheduler actually calls — run one check and exit,
         # no GUI. See gazette_watcher/watcher.py for what a "check" does --
         # unless the visible copy of the app is gone, in which case this
@@ -1746,4 +1876,5 @@ if __name__ == "__main__":
             watcher.run()
     else:
         _refresh_exe_cache()
+        _sync_link_protocol()
         App().mainloop()

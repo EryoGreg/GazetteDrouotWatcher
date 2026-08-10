@@ -122,6 +122,15 @@ TRANSLATIONS = {
             "'playwright install firefox' once before using it. Opera, Brave, Vivaldi, Safari and other "
             "less-mainstream browsers aren't supported — Playwright doesn't know how to drive them."
         ),
+        "browser_system_default": "System default",
+        "field_link_browser_label": "Browser for notification links",
+        "field_link_browser_desc": (
+            "Which browser opens an article when you click its notification. \"System default\" uses "
+            "whatever Windows opens links with, which is usually what you want. Pick a specific browser "
+            "only if links keep opening in one you don't use — that normally means it was never set as "
+            "the Windows default, and fixing that in Settings > Apps > Default apps fixes every app at "
+            "once, not just this one."
+        ),
         "pages_to_watch": "Pages to watch",
         "btn_add_page": "Add page",
         "rubrique_key": "key",
@@ -309,6 +318,16 @@ TRANSLATIONS = {
             "firefox utilise le Firefox intégré à Playwright, pas celui installé sur votre PC — exécutez "
             "« playwright install firefox » une fois avant de l'utiliser. Opera, Brave, Vivaldi, Safari et autres "
             "navigateurs moins courants ne sont pas pris en charge — Playwright ne sait pas les piloter."
+        ),
+        "browser_system_default": "Par défaut du système",
+        "field_link_browser_label": "Navigateur pour les liens des notifications",
+        "field_link_browser_desc": (
+            "Quel navigateur ouvre un article lorsque vous cliquez sur sa notification. « Par défaut du "
+            "système » utilise le navigateur avec lequel Windows ouvre les liens, ce qui convient dans la "
+            "plupart des cas. Ne choisissez un navigateur précis que si les liens s'ouvrent systématiquement "
+            "dans un navigateur que vous n'utilisez pas — cela signifie généralement qu'il n'a jamais été "
+            "défini comme navigateur par défaut de Windows, et le corriger dans Paramètres > Applications > "
+            "Applications par défaut règle le problème pour toutes les applications, pas seulement celle-ci."
         ),
         "pages_to_watch": "Pages surveillées",
         "btn_add_page": "Ajouter une page",
@@ -507,6 +526,16 @@ TRANSLATIONS = {
             "'playwright install firefox' una vez antes de usarlo. Opera, Brave, Vivaldi, Safari y otros "
             "navegadores menos comunes no son compatibles — Playwright no sabe controlarlos."
         ),
+        "browser_system_default": "Predeterminado del sistema",
+        "field_link_browser_label": "Navegador para los enlaces de las notificaciones",
+        "field_link_browser_desc": (
+            "Qué navegador abre un artículo al hacer clic en su notificación. 'Predeterminado del sistema' "
+            "usa el navegador con el que Windows abre los enlaces, que suele ser lo que quiere. Elija un "
+            "navegador concreto solo si los enlaces se abren siempre en uno que no usa — normalmente eso "
+            "significa que nunca se estableció como predeterminado de Windows, y corregirlo en Configuración "
+            "> Aplicaciones > Aplicaciones predeterminadas lo arregla para todas las aplicaciones, no solo "
+            "para esta."
+        ),
         "pages_to_watch": "Páginas vigiladas",
         "btn_add_page": "Añadir página",
         "rubrique_key": "clave",
@@ -698,6 +727,16 @@ TRANSLATIONS = {
             "firefox nutzt Playwrights eigenes gebündeltes Firefox, nicht Ihr installiertes — führen Sie einmalig "
             "'playwright install firefox' aus, bevor Sie es verwenden. Opera, Brave, Vivaldi, Safari und andere "
             "weniger verbreitete Browser werden nicht unterstützt — Playwright kann sie nicht steuern."
+        ),
+        "browser_system_default": "Systemstandard",
+        "field_link_browser_label": "Browser für Links aus Benachrichtigungen",
+        "field_link_browser_desc": (
+            "Welcher Browser einen Artikel öffnet, wenn Sie auf dessen Benachrichtigung klicken. "
+            "'Systemstandard' verwendet den Browser, mit dem Windows Links öffnet — normalerweise genau das, "
+            "was Sie wollen. Wählen Sie nur dann einen bestimmten Browser, wenn Links immer in einem "
+            "geöffnet werden, den Sie nicht nutzen — meist heißt das, dass er nie als Windows-Standard "
+            "festgelegt wurde, und das in Einstellungen > Apps > Standard-Apps zu korrigieren behebt es für "
+            "alle Apps auf einmal, nicht nur für diese."
         ),
         "pages_to_watch": "Beobachtete Seiten",
         "btn_add_page": "Seite hinzufügen",
@@ -894,6 +933,15 @@ TRANSLATIONS = {
             "'playwright install firefox' uma vez antes de o usar. Opera, Brave, Vivaldi, Safari e outros "
             "navegadores menos comuns não são suportados — o Playwright não sabe controlá-los."
         ),
+        "browser_system_default": "Predefinição do sistema",
+        "field_link_browser_label": "Navegador para os links das notificações",
+        "field_link_browser_desc": (
+            "Qual navegador abre um artigo quando clica na sua notificação. 'Predefinição do sistema' usa o "
+            "navegador com que o Windows abre links, que costuma ser o que se pretende. Escolha um navegador "
+            "específico apenas se os links abrirem sempre num que não usa — normalmente isso significa que "
+            "nunca foi definido como predefinido do Windows, e corrigir isso em Definições > Aplicações > "
+            "Aplicações predefinidas resolve para todas as aplicações, não apenas para esta."
+        ),
         "pages_to_watch": "Páginas vigiadas",
         "btn_add_page": "Adicionar página",
         "rubrique_key": "chave",
@@ -1083,6 +1131,16 @@ TRANSLATIONS = {
             "использованием один раз выполните 'playwright install firefox'. Opera, Brave, Vivaldi, Safari и другие "
             "менее распространённые браузеры не поддерживаются — Playwright не умеет ими управлять."
         ),
+        "browser_system_default": "Системный по умолчанию",
+        "field_link_browser_label": "Браузер для ссылок из уведомлений",
+        "field_link_browser_desc": (
+            "Какой браузер открывает статью при нажатии на уведомление. «Системный по умолчанию» использует "
+            "тот браузер, которым Windows открывает ссылки, — обычно это то, что нужно. Выбирайте конкретный "
+            "браузер только если ссылки постоянно открываются в том, которым вы не пользуетесь: как правило, "
+            "это значит, что он никогда не был назначен браузером по умолчанию в Windows, и исправление "
+            "этого в «Параметры > Приложения > Приложения по умолчанию» решит проблему сразу для всех "
+            "программ, а не только для этой."
+        ),
         "pages_to_watch": "Отслеживаемые страницы",
         "btn_add_page": "Добавить страницу",
         "rubrique_key": "ключ",
@@ -1268,6 +1326,13 @@ TRANSLATIONS = {
             "“playwright install firefox”。Opera、Brave、Vivaldi、Safari 等较小众的浏览器不受支持——"
             "Playwright 无法驱动它们。"
         ),
+        "browser_system_default": "系统默认",
+        "field_link_browser_label": "打开通知链接的浏览器",
+        "field_link_browser_desc": (
+            "点击通知时用哪个浏览器打开文章。“系统默认”会使用 Windows 打开链接所用的浏览器，通常这就是你想要的。"
+            "只有当链接总是在你不用的浏览器中打开时，才需要指定某个浏览器——这通常说明它从未被设为 Windows 的"
+            "默认浏览器，在“设置 > 应用 > 默认应用”中修正后，所有程序都会一并解决，而不只是这一个。"
+        ),
         "pages_to_watch": "监控的页面",
         "btn_add_page": "添加页面",
         "rubrique_key": "键（key）",
@@ -1444,6 +1509,15 @@ TRANSLATIONS = {
             "インストール済みのものではありません——使用前に一度「playwright install firefox」を"
             "実行してください。Opera、Brave、Vivaldi、Safari などのあまり一般的でないブラウザーは"
             "サポートされていません——Playwright はこれらを操作する方法を知りません。"
+        ),
+        "browser_system_default": "システムの既定",
+        "field_link_browser_label": "通知のリンクを開くブラウザー",
+        "field_link_browser_desc": (
+            "通知をクリックしたときに記事を開くブラウザーです。「システムの既定」は Windows がリンクを開く"
+            "ときに使うブラウザーを使用します。通常はこれで問題ありません。使っていないブラウザーでリンクが"
+            "開いてしまう場合にのみ、特定のブラウザーを選んでください——たいていは、そのブラウザーが Windows "
+            "の既定として設定されていないだけで、「設定 > アプリ > 既定のアプリ」で直せば、このアプリだけで"
+            "なくすべてのアプリでまとめて解決します。"
         ),
         "pages_to_watch": "監視するページ",
         "btn_add_page": "ページを追加",
@@ -1633,6 +1707,15 @@ TRANSLATIONS = {
             "गए का नहीं — उपयोग से पहले एक बार 'playwright install firefox' चलाएँ। Opera, Brave, Vivaldi, "
             "Safari और अन्य कम प्रचलित ब्राउज़र समर्थित नहीं हैं — Playwright को उन्हें चलाना नहीं आता।"
         ),
+        "browser_system_default": "सिस्टम डिफ़ॉल्ट",
+        "field_link_browser_label": "सूचना के लिंक खोलने वाला ब्राउज़र",
+        "field_link_browser_desc": (
+            "सूचना पर क्लिक करने पर लेख किस ब्राउज़र में खुलेगा। 'सिस्टम डिफ़ॉल्ट' वही ब्राउज़र इस्तेमाल करता है "
+            "जिससे Windows लिंक खोलता है, और आमतौर पर यही सही रहता है। कोई खास ब्राउज़र तभी चुनें जब लिंक बार-बार "
+            "ऐसे ब्राउज़र में खुलते हों जिसे आप इस्तेमाल नहीं करते — आमतौर पर इसका मतलब यह है कि उसे कभी Windows "
+            "का डिफ़ॉल्ट ब्राउज़र सेट किया ही नहीं गया, और सेटिंग्स > ऐप्स > डिफ़ॉल्ट ऐप्स में इसे ठीक करने से यह "
+            "सिर्फ़ इस ऐप के लिए नहीं, बल्कि सभी ऐप्स के लिए एक साथ ठीक हो जाता है।"
+        ),
         "pages_to_watch": "देखे जा रहे पेज",
         "btn_add_page": "पेज जोड़ें",
         "rubrique_key": "key",
@@ -1820,6 +1903,14 @@ TRANSLATIONS = {
             "يستخدم firefox نسخة Firefox المدمجة الخاصة بـ Playwright، وليست النسخة المثبتة لديك — شغّل "
             "'playwright install firefox' مرة واحدة قبل استخدامه. المتصفحات الأقل شيوعًا مثل Opera وBrave "
             "وVivaldi وSafari غير مدعومة — لا يعرف Playwright كيفية تشغيلها."
+        ),
+        "browser_system_default": "الافتراضي للنظام",
+        "field_link_browser_label": "المتصفح الذي يفتح روابط الإشعارات",
+        "field_link_browser_desc": (
+            "أي متصفح يفتح المقال عند النقر على إشعاره. 'الافتراضي للنظام' يستخدم المتصفح الذي يفتح به Windows "
+            "الروابط، وهو ما تريده في الغالب. اختر متصفحًا محددًا فقط إذا كانت الروابط تُفتح دائمًا في متصفح لا "
+            "تستخدمه — وهذا يعني عادةً أنه لم يُضبط قط كمتصفح افتراضي في Windows، وتصحيح ذلك من الإعدادات > "
+            "التطبيقات > التطبيقات الافتراضية يحل المشكلة لكل التطبيقات دفعة واحدة، لا لهذا التطبيق فقط."
         ),
         "pages_to_watch": "الصفحات المُراقَبة",
         "btn_add_page": "إضافة صفحة",

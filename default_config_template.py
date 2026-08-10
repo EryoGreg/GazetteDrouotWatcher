@@ -111,6 +111,22 @@ NOTIF_GAP_SECONDS = 7
 
 
 # ---------------------------------------------------------------------------
+# Which browser opens an article when you click its notification.
+#
+# Empty (the default) means "whatever Windows opens links with" — the real
+# default-browser setting. That is almost always what you want.
+#
+# Set this to a browser's .exe path only if links keep opening in a browser
+# you don't use. That usually means the browser you actually use was never
+# registered as the Windows default (installing it isn't enough — it has to
+# be set in Settings > Apps > Default apps), in which case setting it there
+# fixes every app at once, not just this one. Use the dropdown in the
+# control panel's Settings rather than typing a path by hand.
+# ---------------------------------------------------------------------------
+NOTIFICATION_BROWSER = ""
+
+
+# ---------------------------------------------------------------------------
 # If a run fails (Cloudflare block, or the site's HTML no longer matching
 # what this script expects), how long to wait before showing the same kind
 # of "something's wrong" alert toast again — so a multi-hour outage doesn't
