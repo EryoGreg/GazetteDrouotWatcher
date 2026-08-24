@@ -33,6 +33,7 @@ pythonw.exe automatically, so no console window appears), or manually:
 
 import ast
 import ctypes
+import datetime
 import json
 import os
 import re
@@ -41,6 +42,7 @@ import sys
 import threading
 import tkinter as tk
 import types
+import urllib.error
 import urllib.request
 import webbrowser
 import winreg
@@ -268,6 +270,26 @@ GITHUB_LATEST_RELEASE_API = f"https://api.github.com/repos/{GITHUB_REPO}/release
 RELEASES_PAGE_URL = f"https://github.com/{GITHUB_REPO}/releases/latest"
 
 LOG_FILE_PATH = APPDATA_DIR / "logs" / "watcher.log"
+
+
+def _log_gui_event(message: str):
+    """Appends a line to the same log the background watcher writes, so
+    GUI-side problems (an update check that couldn't reach GitHub, say)
+    are actually diagnosable afterwards. Until this existed, anything
+    going wrong in the control panel left no trace anywhere at all, and
+    "Open log file" showed only watcher runs.
+
+    Deliberately plain appends rather than the logging module: the watcher
+    process owns the rotating handler on this file, and two processes
+    attaching handlers to one file is how you get truncation races."""
+    try:
+        LOG_FILE_PATH.parent.mkdir(parents=True, exist_ok=True)
+        stamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S,%f")[:-3]
+        with open(LOG_FILE_PATH, "a", encoding="utf-8") as f:
+            f.write(f"{stamp} INFO [control panel] {message}\n")
+    except Exception:
+        # Logging must never be the thing that breaks the app.
+        pass
 
 # The simple (non-rubrique) settings this GUI can edit, in display order.
 # Each: (config.py variable name, i18n label key, i18n description key, value type)
@@ -1151,6 +1173,13 @@ class App(tk.Tk):
         threading.Thread(target=self._check_for_updates_worker, daemon=True).start()
 
     def _check_for_updates_worker(self):
+        """Runs off the GUI thread. Returns (version, url, reason) where
+        reason is a translation key naming *why* it failed, or None on
+        success -- "couldn't check" with no further detail is impossible to
+        act on, and previously this failed completely silently with nothing
+        written anywhere."""
+        latest = url = None
+        reason = "update_check_failed"
         try:
             req = urllib.request.Request(
                 GITHUB_LATEST_RELEASE_API,
@@ -1160,11 +1189,25 @@ class App(tk.Tk):
                 data = json.loads(resp.read().decode("utf-8"))
             latest = str(data.get("tag_name", "")).lstrip("vV")
             url = data.get("html_url") or RELEASES_PAGE_URL
-        except Exception:
-            # No internet, GitHub rate-limited, API shape changed, etc. --
-            # none of that should ever be a hard error to a user just
-            # opening the control panel; the check just silently gives up.
-            latest, url = None, None
+            reason = None
+        except urllib.error.HTTPError as e:
+            # GitHub allows 60 unauthenticated API calls per hour per IP,
+            # and we spend one on every launch plus every button click, so
+            # this is genuinely reachable -- especially with several people
+            # behind one address. It answers 403 with the remaining budget
+            # at zero, which is what distinguishes it from a real failure.
+            if e.code in (403, 429) and e.headers.get("X-RateLimit-Remaining") == "0":
+                reason = "update_check_rate_limited"
+            else:
+                reason = "update_check_failed"
+            _log_gui_event(f"update check failed: HTTP {e.code} {e.reason}")
+        except urllib.error.URLError as e:
+            # No route to the internet at all: offline, VPN, proxy, DNS.
+            reason = "update_check_offline"
+            _log_gui_event(f"update check failed, host unreachable: {e.reason}")
+        except Exception as e:
+            reason = "update_check_failed"
+            _log_gui_event(f"update check failed: {type(e).__name__}: {e}")
 
         # This runs on a background thread, so the window may have been
         # closed (and self already destroyed) by the time the request
@@ -1172,15 +1215,15 @@ class App(tk.Tk):
         # which would otherwise surface as an unhandled exception on a
         # daemon thread right as the app is shutting down.
         try:
-            self.after(0, self._on_update_check_done, latest, url)
+            self.after(0, self._on_update_check_done, latest, url, reason)
         except (RuntimeError, tk.TclError):
             pass
 
-    def _on_update_check_done(self, latest_version: str | None, url: str | None):
+    def _on_update_check_done(self, latest_version: str | None, url: str | None, reason: str | None = None):
         if not self.winfo_exists():
             return
         if not latest_version:
-            self.update_status_var.set(self.t("update_check_failed"))
+            self.update_status_var.set(self.t(reason or "update_check_failed"))
             return
         self._latest_release_url = url or RELEASES_PAGE_URL
         if _version_tuple(latest_version) > _version_tuple(APP_VERSION):

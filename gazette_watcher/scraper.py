@@ -142,11 +142,15 @@ def _parse_card(card, base_url: str) -> dict:
     }
 
 
-def scrape_listing_page(page, base_url: str, page_num: int) -> list[dict]:
+def scrape_listing_page(page, base_url: str, page_num: int, _retry: bool = False) -> list[dict]:
     """Loads one page of a rubrique's listing (page_num starting at 1) and
     returns the articles found on it, newest-appearing-first as laid out on
     the page (though see the module docstring — that page order is not
-    trustworthy as a "chronological" signal on its own)."""
+    trustworthy as a "chronological" signal on its own).
+
+    _retry is internal: set when this is already the second attempt at a
+    page whose article cards didn't appear, so the "markup changed" path
+    below doesn't loop forever."""
     url = base_url if page_num == 1 else f"{base_url}?page={page_num}"
     page.goto(url, wait_until="domcontentloaded", timeout=30000)
 
@@ -177,9 +181,23 @@ def scrape_listing_page(page, base_url: str, page_num: int) -> list[dict]:
         # 3) Neither of the above: page 1 came back with zero article
         #    cards and it's not a Cloudflare page — the site's HTML has
         #    likely changed shape and our selectors no longer match it.
+        #
+        #    "Likely", not "certainly", which is why this doesn't cry wolf
+        #    on the first try. Real logs showed this firing twice on days
+        #    where the runs immediately before and after both succeeded —
+        #    i.e. the markup hadn't changed at all, the page just hadn't
+        #    finished rendering. Since the payoff for being wrong here is
+        #    a scary "this app needs an update, contact the developer"
+        #    notification, one full reload is worth the extra few seconds
+        #    before concluding anything.
+        if not _retry:
+            page.reload(wait_until="domcontentloaded", timeout=30000)
+            return scrape_listing_page(page, base_url, page_num, _retry=True)
+
         raise SiteStructureChangedError(
             f"page {page_num} of {url} loaded but no div.articleResume cards were found "
-            f"(and it doesn't look like a Cloudflare block) — the site's markup may have changed"
+            f"on two consecutive attempts (and it doesn't look like a Cloudflare block) — "
+            f"the site's markup may have changed"
         )
 
     cards = page.locator("div.articleResume")

@@ -30,7 +30,13 @@ _TASK_ACTION_EXEC = 0
 _TASK_TRIGGER_TIME = 1
 _TASK_LOGON_INTERACTIVE_TOKEN = 3
 _TASK_CREATE_OR_UPDATE = 6
-_TASK_INSTANCES_IGNORE_NEW = 3
+# TASK_INSTANCES_POLICY: 0 = PARALLEL, 1 = QUEUE, 2 = IGNORE_NEW,
+# 3 = STOP_EXISTING. This was 3 for a long time under the name IGNORE_NEW,
+# which meant a new trigger *killed a run already in progress* instead of
+# skipping itself — the exact opposite of the intent, and a likely cause of
+# some of the "Connection closed while reading from the driver" errors in
+# the log (a scrape aborted mid-flight leaves Playwright's driver dead).
+_TASK_INSTANCES_IGNORE_NEW = 2
 
 _STATE_NAMES = {0: "unknown", 1: "disabled", 2: "queued", 3: "ready", 4: "running"}
 

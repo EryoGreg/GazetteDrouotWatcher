@@ -15,8 +15,10 @@ This script does not loop or sleep itself, each run is a fresh,
 independent process.
 """
 
+import contextlib
 import logging
 import logging.handlers
+import time
 from datetime import datetime, timedelta, timezone
 
 from playwright.sync_api import sync_playwright
@@ -124,6 +126,30 @@ def _maybe_alert(alert_key: str, send_fn):
     log.info("'%s' alert sent", alert_key)
 
 
+@contextlib.contextmanager
+def _start_playwright(log):
+    """sync_playwright(), but tolerating the driver failing to start on the
+    first attempt.
+
+    Real logs show runs dying with "Connection closed while reading from
+    the driver" and "'PlaywrightContextManager' object has no attribute
+    '_playwright'", clustered at hours consistent with the machine
+    sleeping/resuming. Nothing has been scraped at that point, so one
+    clean retry costs a few seconds and rescues the whole cycle."""
+    manager = sync_playwright()
+    try:
+        playwright = manager.__enter__()
+    except Exception:
+        log.warning("Playwright driver failed to start, retrying once", exc_info=True)
+        time.sleep(5)
+        manager = sync_playwright()
+        playwright = manager.__enter__()
+    try:
+        yield playwright
+    finally:
+        manager.__exit__(None, None, None)
+
+
 def run():
     _setup_logging()
     log = logging.getLogger("gazette_watcher")
@@ -135,7 +161,7 @@ def run():
     structure_changed = []
 
     try:
-        with sync_playwright() as p:
+        with _start_playwright(log) as p:
             # "firefox" is a genuinely different Playwright browser type (its
             # own bundled build, downloaded via `playwright install firefox`
             # — not a --channel like the Chromium-family browsers below).
