@@ -2246,13 +2246,24 @@ class App(tk.Tk):
             messagebox.showerror(self.t("dlg_reset_all_title"), self.t("err_reset_all_body", detail="\n".join(failed)))
             return
 
+        # Brief pause to let Windows release file locks on the deleted
+        # directory. Without this, the new frozen instance's PyInstaller
+        # extraction can collide with stale handles and crash with
+        # "Failed to start embedded python interpreter: Failed to import
+        # encodings module" on consecutive resets.
+        time.sleep(0.5)
         if not _relaunch_self():
             messagebox.showerror(self.t("dlg_reset_all_title"), self.t("err_reset_all_relaunch"))
             return
         # Leave immediately: this instance still holds the now-deleted
         # settings in memory, and anything it wrote on the way out (window
         # position, prefs) would recreate the very files just removed.
-        self.destroy()
+        # os._exit() is used instead of self.destroy() because destroy()
+        # triggers _really_quit() which writes gui_prefs.json and log files
+        # back to AppData — racing with the new instance's own startup
+        # writes. In frozen mode, this race corrupted the PyInstaller
+        # extraction and caused a bootloader-level crash.
+        os._exit(0)
 
     def log(self, message: str):
         self.log_text.configure(state="normal")
