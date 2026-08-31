@@ -145,7 +145,7 @@ def _cleanup_stale_temp_in_background():
     def worker():
         count = _cleanup_stale_pyinstaller_temp()
         if count:
-            _log_gui_event(f"cleaned up {count} leftover temporary folder(s) from previous runs")
+            _log_ui(f"cleaned up {count} leftover temporary folder(s) from previous runs")
 
     threading.Thread(target=worker, daemon=True).start()
 
@@ -329,7 +329,7 @@ AUTHOR_URL = "https://github.com/EryoGreg?tab=repositories"
 
 # Bump this on every release — compared against GitHub's "latest release"
 # tag by the Updates section to tell the user a newer version exists.
-APP_VERSION = "1.2.3"
+APP_VERSION = "1.3.0"
 GITHUB_REPO = "EryoGreg/GazetteDrouotWatcher"
 GITHUB_LATEST_RELEASE_API = f"https://api.github.com/repos/{GITHUB_REPO}/releases/latest"
 RELEASES_PAGE_URL = f"https://github.com/{GITHUB_REPO}/releases/latest"
@@ -337,21 +337,35 @@ RELEASES_PAGE_URL = f"https://github.com/{GITHUB_REPO}/releases/latest"
 LOG_FILE_PATH = APPDATA_DIR / "logs" / "watcher.log"
 
 
-def _log_gui_event(message: str):
-    """Appends a line to the same log the background watcher writes, so
-    GUI-side problems (an update check that couldn't reach GitHub, say)
-    are actually diagnosable afterwards. Until this existed, anything
-    going wrong in the control panel left no trace anywhere at all, and
-    "Open log file" showed only watcher runs.
+# Kept separate from watcher.log on purpose: that one is a record of what
+# the background checks found on the website, and interleaving every click
+# and settings tweak into it would bury the thing it exists to show. This
+# is the other half -- what the *person* did, and what the app changed on
+# disk as a result.
+UI_LOG_PATH = APPDATA_DIR / "logs" / "control_panel.log"
+_UI_LOG_MAX_BYTES = 1_000_000
+
+
+def _log_ui(message: str):
+    """Appends one line to the control-panel activity log.
 
     Deliberately plain appends rather than the logging module: the watcher
-    process owns the rotating handler on this file, and two processes
-    attaching handlers to one file is how you get truncation races."""
+    process owns a rotating handler on its own file, and attaching handlers
+    from several processes to one file is how truncation races happen. One
+    previous generation is kept, so the file can't grow without bound but
+    recent history always survives a rollover."""
     try:
-        LOG_FILE_PATH.parent.mkdir(parents=True, exist_ok=True)
+        UI_LOG_PATH.parent.mkdir(parents=True, exist_ok=True)
+        try:
+            if UI_LOG_PATH.stat().st_size > _UI_LOG_MAX_BYTES:
+                backup = UI_LOG_PATH.with_suffix(".log.1")
+                backup.unlink(missing_ok=True)
+                UI_LOG_PATH.rename(backup)
+        except OSError:
+            pass  # locked or missing -- just keep appending
         stamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S,%f")[:-3]
-        with open(LOG_FILE_PATH, "a", encoding="utf-8") as f:
-            f.write(f"{stamp} INFO [control panel] {message}\n")
+        with open(UI_LOG_PATH, "a", encoding="utf-8") as f:
+            f.write(f"{stamp} {message}\n")
     except Exception:
         # Logging must never be the thing that breaks the app.
         pass
@@ -519,8 +533,10 @@ def _sync_link_protocol():
         chosen = getattr(_load_live_config(), "NOTIFICATION_BROWSER", "")
         if chosen:
             browser_launch.register_link_protocol(_link_handler_command())
+            _log_ui(f"registered link handler so notifications open in: {chosen}")
         else:
             browser_launch.unregister_link_protocol()
+            _log_ui("notification links set to use the system default browser")
     except Exception:
         # Never let this break startup or saving -- worst case links open
         # in the system default browser, which is the normal behavior.
@@ -917,7 +933,8 @@ def _load_gui_prefs() -> dict:
     return {}
 
 
-def _save_gui_prefs(prefs: dict):
+def _save_gui_prefs(prefs: dict, _reason: str = ""):
+    _log_ui(f"file written: {GUI_PREFS_PATH}" + (f" ({_reason})" if _reason else ""))
     try:
         GUI_PREFS_PATH.write_text(json.dumps(prefs), encoding="utf-8")
     except Exception:
@@ -994,6 +1011,12 @@ class App(tk.Tk):
         self.style.theme_use("clam")  # base theme that actually honors custom colors on Windows
 
         self._build_all()
+        _log_ui(
+            f"--- control panel opened (v{APP_VERSION}, "
+            f"{'administrator' if self._is_admin_at_launch else 'standard user'}, "
+            f"language={self.lang}, theme={self.current_theme}) ---"
+        )
+        _log_ui(f"running from: {sys.executable}")
         self.after(150, self._maybe_show_first_run_guide)
 
     def _maybe_show_first_run_guide(self):
@@ -1009,6 +1032,7 @@ class App(tk.Tk):
             self._show_first_run_guide()
 
     def _show_first_run_guide(self):
+        _log_ui("setup guide window opened")
         c = self._theme_colors()
         win = tk.Toplevel(self)
         win.title(self.t("welcome_title"))
@@ -1117,7 +1141,8 @@ class App(tk.Tk):
         win.wait_window()
 
     def _set_show_guide_on_start(self, value: bool):
-        _save_gui_prefs({**_load_gui_prefs(), "show_guide_on_start": value})
+        _log_ui(f"setting changed: show setup guide at startup -> {value}")
+        _save_gui_prefs({**_load_gui_prefs(), "show_guide_on_start": value}, "show setup guide at startup")
         if hasattr(self, "show_guide_var"):
             self.show_guide_var.set(value)
 
@@ -1243,15 +1268,20 @@ class App(tk.Tk):
         menu.tk_popup(event.x_root, event.y_root)
 
     def on_language_change(self, code: str):
+        _log_ui(f"clicked: language menu -> changed language from '{self.lang}' to '{code}'")
         if code == self.lang:
             return
         self.lang = code
-        _save_gui_prefs({**_load_gui_prefs(), "language": code})
+        _save_gui_prefs({**_load_gui_prefs(), "language": code}, f"language = {code}")
         self.rebuild_ui()
 
     def on_theme_toggle(self):
+        _log_ui(
+            f"clicked: theme toggle -> switching from '{self.current_theme}' to "
+            f"'{'light' if self.current_theme == 'dark' else 'dark'}'"
+        )
         self.current_theme = "light" if self.current_theme == "dark" else "dark"
-        _save_gui_prefs({**_load_gui_prefs(), "theme": self.current_theme})
+        _save_gui_prefs({**_load_gui_prefs(), "theme": self.current_theme}, f"theme = {self.current_theme}")
         self.apply_theme(self.current_theme)
 
     def _theme_colors(self, resolved: str | None = None) -> dict:
@@ -1419,6 +1449,7 @@ class App(tk.Tk):
         self._check_for_updates_async()
 
     def _check_for_updates_async(self):
+        _log_ui(f"checking for updates (installed version {APP_VERSION})")
         self.update_status_var.set(self.t("update_checking"))
         self.update_download_button.configure(state="disabled")
         threading.Thread(target=self._check_for_updates_worker, daemon=True).start()
@@ -1458,7 +1489,7 @@ class App(tk.Tk):
                     reason = "update_check_rate_limited"
                 else:
                     reason = "update_check_failed"
-                _log_gui_event(f"update check failed: HTTP {e.code} {e.reason}")
+                _log_ui(f"update check failed: HTTP {e.code} {e.reason}")
                 break  # a real answer from GitHub -- retrying won't change it
             except urllib.error.URLError as e:
                 # Certificate verification failing is NOT the same as being
@@ -1471,13 +1502,13 @@ class App(tk.Tk):
                 # sign into an actual vulnerability.
                 if isinstance(getattr(e, "reason", None), ssl.SSLError):
                     reason = "update_check_tls_blocked"
-                    _log_gui_event(f"update check failed, TLS verification: {e.reason}")
+                    _log_ui(f"update check failed, TLS verification: {e.reason}")
                     break
                 reason = "update_check_offline"
-                _log_gui_event(f"update check failed, host unreachable (attempt {attempt}): {e.reason}")
+                _log_ui(f"update check failed, host unreachable (attempt {attempt}): {e.reason}")
             except Exception as e:
                 reason = "update_check_failed"
-                _log_gui_event(f"update check failed (attempt {attempt}): {type(e).__name__}: {e}")
+                _log_ui(f"update check failed (attempt {attempt}): {type(e).__name__}: {e}")
             if attempt == 1:
                 time.sleep(2)
 
@@ -1495,9 +1526,11 @@ class App(tk.Tk):
         if not self.winfo_exists():
             return
         if not latest_version:
+            _log_ui(f"update check result: could not check ({reason})")
             self.update_status_var.set(self.t(reason or "update_check_failed"))
             return
         self._latest_release_url = url or RELEASES_PAGE_URL
+        _log_ui(f"update check result: latest is v{latest_version}, installed is v{APP_VERSION}")
         if _version_tuple(latest_version) > _version_tuple(APP_VERSION):
             self.update_status_var.set(self.t("update_available", version=latest_version))
             self.update_download_button.configure(state="normal")
@@ -1505,6 +1538,7 @@ class App(tk.Tk):
             self.update_status_var.set(self.t("update_up_to_date", version=APP_VERSION))
 
     def _open_latest_release(self):
+        _log_ui(f"clicked: Download update -> opening {self._latest_release_url}")
         webbrowser.open(self._latest_release_url)
 
     # -- scheduled task controls ---------------------------------------------
@@ -1524,6 +1558,11 @@ class App(tk.Tk):
             side="left", padx=(4, 0)
         )
         ttk.Button(status_row, text=self.t("btn_refresh"), command=self.refresh_status).pack(side="right")
+        ttk.Button(
+            status_row,
+            text=self.t("btn_open_activity_log"),
+            command=lambda: self._open_log_file(UI_LOG_PATH, "btn_open_activity_log"),
+        ).pack(side="right", padx=(0, 6))
         ttk.Button(status_row, text=self.t("btn_open_log"), command=self._open_log_file).pack(
             side="right", padx=(0, 6)
         )
@@ -1567,6 +1606,7 @@ class App(tk.Tk):
         # never turned on and with no GUI path to enable it.
 
     def _on_restart_as_admin_click(self):
+        _log_ui("clicked: Restart as Administrator")
         if _relaunch_as_admin():
             # Always a real shutdown, never hide-to-tray -- this process is
             # about to be replaced by the elevated relaunch, so leaving it
@@ -1588,22 +1628,33 @@ class App(tk.Tk):
             "unknown": self.t("status_unknown"),
         }.get(code, code)
         self.status_var.set(text)
+        if getattr(self, "_last_logged_status", None) != code:
+            # Only on change: refresh_status() also runs after every action
+            # and on a timer, and logging it each time would drown the file.
+            self._last_logged_status = code
+            _log_ui(f"scheduled task status: {code}")
 
-    def _open_log_file(self):
-        if not LOG_FILE_PATH.exists():
-            messagebox.showinfo(self.t("btn_open_log"), self.t("log_file_missing"))
+    def _open_log_file(self, path=None, title_key="btn_open_log"):
+        """Opens one of the two logs: what the background checks found
+        (watcher.log), or what was done in this window (control_panel.log)."""
+        path = path or LOG_FILE_PATH
+        _log_ui(f"clicked: open log -> {path}")
+        if not path.exists():
+            messagebox.showinfo(self.t(title_key), self.t("log_file_missing"))
             return
         try:
-            os.startfile(str(LOG_FILE_PATH))
+            os.startfile(str(path))
         except OSError as e:
-            messagebox.showerror(self.t("btn_open_log"), self.t("err_open_log_failed", error=e))
+            messagebox.showerror(self.t(title_key), self.t("err_open_log_failed", error=e))
 
     def _run_action(self, action_key: str, fn):
         action_name = self.t(action_key)
+        _log_ui(f"clicked: {action_key} ('{action_name}')")
         self.log(self.t("log_action_dashes", action=action_name))
         ok, output = fn()
 
         if not ok and output == _PERMISSION_DENIED_SENTINEL and not _is_admin():
+            _log_ui(f"result: {action_key} -> needs administrator rights")
             self.log(self.t("log_permission_hint"))
             if messagebox.askyesno(action_name, self.t("dlg_admin_needed_body", action=action_name)):
                 if _relaunch_as_admin():
@@ -1625,6 +1676,7 @@ class App(tk.Tk):
         elif output:
             self.log(output)
 
+        _log_ui(f"result: {action_key} -> {'OK' if ok else 'FAILED'}" + (f" ({output})" if output else ""))
         self.log(self.t("log_ok") if ok else self.t("log_failed"))
         self.refresh_status()
         if not ok:
@@ -1736,7 +1788,7 @@ class App(tk.Tk):
         ttk.Button(
             rub_header,
             text=self.t("btn_add_page"),
-            command=lambda: self._add_rubrique_row(is_new=True),
+            command=lambda: (_log_ui("clicked: Add page"), self._add_rubrique_row(is_new=True)),
             state=action_state,
         ).pack(side="right")
 
@@ -1903,6 +1955,7 @@ class App(tk.Tk):
         }
 
         def remove():
+            _log_ui(f"clicked: remove page -> key={entry['key'].get()!r} (not saved yet)")
             row.destroy()
             self.rubrique_rows.remove(entry)
             self._update_action_button_styles()
@@ -1926,6 +1979,7 @@ class App(tk.Tk):
         self.rubrique_rows = []
 
     def load_settings(self):
+        _log_ui(f"loading settings from {CONFIG_PATH}")
         try:
             config = _load_live_config()
         except Exception as e:
@@ -2007,9 +2061,27 @@ class App(tk.Tk):
         return updates
 
     def on_save_settings(self):
+        _log_ui("clicked: Save settings")
         updates = self._collect_updates()
         if updates is None:
+            _log_ui("save aborted: a value failed validation, nothing was written")
             return
+
+        # Recorded before the write, since load_settings() resets the
+        # baselines straight afterwards -- this is the only moment both the
+        # old and new values are still known.
+        for name, *_ in SIMPLE_FIELDS:
+            if self._is_field_dirty(name):
+                old = self._baseline_simple.get(name)
+                new = self.field_vars[name][0].get()
+                _log_ui(f"setting changed: {name}: {old!r} -> {new!r}")
+        for i, entry in enumerate(self.rubrique_rows):
+            if self._is_rubrique_dirty(entry):
+                now = (entry["key"].get(), entry["label"].get(), entry["url"].get())
+                if entry["is_new"]:
+                    _log_ui(f"page added: key={now[0]!r} label={now[1]!r} url={now[2]!r}")
+                else:
+                    _log_ui(f"page {i + 1} changed: {entry['baseline']!r} -> {now!r}")
 
         # Snapshot which rows are orange (unsaved) *before* saving — after a
         # successful save everything is clean by definition (baseline gets
@@ -2026,8 +2098,10 @@ class App(tk.Tk):
             ast.parse(patched)  # sanity check before writing
             CONFIG_PATH.write_text(patched, encoding="utf-8")
         except Exception as e:
+            _log_ui(f"save FAILED, {CONFIG_PATH} left unchanged: {type(e).__name__}: {e}")
             messagebox.showerror(self.t("err_save_failed_title"), self.t("err_save_failed_body", error=e))
             return
+        _log_ui(f"file written: {CONFIG_PATH}")
         self.log(self.t("log_saved_settings"))
         _sync_link_protocol()
 
@@ -2065,6 +2139,7 @@ class App(tk.Tk):
         self.after(500, revert)
 
     def on_reset_defaults(self):
+        _log_ui("clicked: Reset to defaults")
         if not messagebox.askyesno(self.t("dlg_reset_confirm_title"), self.t("dlg_reset_confirm_body")):
             return
         updates = {name: repr(DEFAULTS[name]) for name, *_ in SIMPLE_FIELDS}
@@ -2077,6 +2152,7 @@ class App(tk.Tk):
         except Exception as e:
             messagebox.showerror(self.t("err_reset_failed_title"), self.t("err_reset_failed_body", error=e))
             return
+        _log_ui(f"file written: {CONFIG_PATH} (all settings restored to factory defaults)")
         self.log(self.t("log_reset_settings"))
         _sync_link_protocol()
 
@@ -2115,6 +2191,7 @@ class App(tk.Tk):
         ).pack(side="right", padx=(8, 0))
 
     def on_reset_all(self):
+        _log_ui("clicked: Reset everything and restart")
         """Deletes everything the app has written and restarts it, for when
         a config carried over from an older version is broken enough that
         editing settings can't fix it."""
@@ -2148,7 +2225,12 @@ class App(tk.Tk):
         ):
             return
 
+        _log_ui("full reset confirmed by user, deleting application data")
         deleted, failed = _delete_all_app_data()
+        for _p in deleted:
+            _log_ui(f"deleted: {_p}")
+        for _p in failed:
+            _log_ui(f"could NOT delete: {_p}")
         for path in deleted:
             self.log(self.t("log_reset_all_deleted", path=path))
         for path in failed:
@@ -2184,6 +2266,7 @@ class App(tk.Tk):
         self._really_quit()
 
     def _really_quit(self):
+        _log_ui("--- control panel closed ---")
         if self._tray_icon is not None:
             self._tray_icon.stop()
             self._tray_icon = None
@@ -2195,7 +2278,7 @@ class App(tk.Tk):
                 "w": self.winfo_width(),
                 "h": self.winfo_height(),
             }
-            _save_gui_prefs(prefs)
+            _save_gui_prefs(prefs, "window position and size")
         except Exception:
             pass
         self.destroy()
@@ -2221,7 +2304,7 @@ class App(tk.Tk):
     def on_toggle_tray_icon(self, var: tk.BooleanVar):
         enabled = var.get()
         self._apply_tray_icon_preference(enabled)
-        _save_gui_prefs({**_load_gui_prefs(), "show_tray_icon": enabled})
+        _save_gui_prefs({**_load_gui_prefs(), "show_tray_icon": enabled}, f"tray icon = {enabled}")
 
 
 if __name__ == "__main__":
