@@ -551,6 +551,65 @@ def _appdata_dir_is_safe_to_delete(target: Path) -> bool:
         return False
 
 
+def _looks_like_source_checkout(folder: Path) -> bool:
+    """True if `folder` is the gazette_watcher *source package* rather than
+    the bare data folder older builds dropped next to the .exe.
+
+    This matters because a built .exe is very often kept inside its own
+    source repo, so PROJECT_DIR and the checkout are the same place -- and
+    deleting config.py there destroys a real tracked file rather than a
+    stale leftover. The data folder only ever contained config.py; the
+    package obviously has the rest of the modules beside it."""
+    try:
+        return any(
+            (folder / name).is_file()
+            for name in ("watcher.py", "scraper.py", "notifier.py", "task_scheduler.py", "state.py")
+        )
+    except Exception:
+        return True  # can't tell -> assume it's source and leave it alone
+
+
+def _delete_tree_resilient(root: Path) -> list[str]:
+    """Deletes `root` bottom-up, retrying each entry briefly, and returns
+    whatever survived instead of aborting the whole operation.
+
+    shutil.rmtree gives up entirely the moment one file is locked, which in
+    practice meant a single transient handle on watcher.log -- Windows
+    Search indexing it, an antivirus scanning it, or the user having it
+    open in a viewer -- blocked the entire reset. Everything here is
+    independent, so one stubborn file shouldn't save the rest."""
+    survivors: list[str] = []
+
+    def remove(path: Path, remover):
+        # Two quick retries: the common case is a handle being released a
+        # fraction of a second later, not a permanent lock.
+        for attempt in range(3):
+            try:
+                remover(path)
+                return True
+            except OSError:
+                if attempt < 2:
+                    time.sleep(0.25)
+        survivors.append(str(path))
+        return False
+
+    for current, dirs, files in os.walk(root, topdown=False):
+        current_path = Path(current)
+        for name in files:
+            remove(current_path / name, lambda p: p.unlink())
+        for name in dirs:
+            sub = current_path / name
+            # Only ever rmdir: a junction inside would otherwise be walked
+            # into, and a non-empty dir means something above survived.
+            if not any(sub.iterdir()) if sub.is_dir() else False:
+                remove(sub, lambda p: p.rmdir())
+            elif sub.is_dir():
+                survivors.append(str(sub))
+    if not survivors:
+        remove(root, lambda p: p.rmdir())
+    return survivors
+
+
 def _delete_all_app_data() -> tuple[list[str], list[str]]:
     """Removes the AppData folder plus the legacy next-to-the-exe config
     files older builds used to write. Returns (deleted, failed) as display
@@ -560,11 +619,17 @@ def _delete_all_app_data() -> tuple[list[str], list[str]]:
 
     if APPDATA_DIR.exists():
         if _appdata_dir_is_safe_to_delete(APPDATA_DIR):
-            try:
-                shutil.rmtree(APPDATA_DIR)
+            survivors = _delete_tree_resilient(APPDATA_DIR)
+            if not APPDATA_DIR.exists():
                 deleted.append(str(APPDATA_DIR))
-            except Exception as e:
-                failed.append(f"{APPDATA_DIR} ({e})")
+            else:
+                # Everything that actually holds settings/state is gone even
+                # in this case -- what survives a reset is essentially always
+                # the log file, which is regenerated and harmless. Report it
+                # so nothing is hidden, but don't call the reset a failure.
+                deleted.append(f"{APPDATA_DIR} (partially)")
+                for path in survivors:
+                    failed.append(f"{path} (in use by another program)")
         else:
             failed.append(f"{APPDATA_DIR} (failed a safety check, left untouched)")
 
@@ -573,7 +638,13 @@ def _delete_all_app_data() -> tuple[list[str], list[str]]:
     # package, and config.py in it is a real tracked file -- deleting the
     # developer's own checkout would be an unpleasant surprise.
     if getattr(sys, "frozen", False):
-        for legacy in (PROJECT_DIR / "gazette_watcher" / "config.py", PROJECT_DIR / "gui_prefs.json"):
+        legacy_paths = [PROJECT_DIR / "gui_prefs.json"]
+        # Only when it's genuinely the old data folder -- a built .exe is
+        # commonly kept inside its own source repo, and this deleted a real
+        # tracked config.py there before this check existed.
+        if not _looks_like_source_checkout(PROJECT_DIR / "gazette_watcher"):
+            legacy_paths.insert(0, PROJECT_DIR / "gazette_watcher" / "config.py")
+        for legacy in legacy_paths:
             try:
                 # is_file() is False for directories and for broken links,
                 # so this can only ever remove a real regular file at the
@@ -648,6 +719,7 @@ THEMES = {
         "border": "#D8DAE5",
         "link_fg": "#4F46E5",
         "warning_fg": "#DC2626",
+        "danger_active": "#B91C1C",  # pressed/hover shade of warning_fg
         "accent_active": "#4338CA",  # pressed/hover shade of link_fg, for filled Primary.TButton
         "accent_fg": "#FFFFFF",  # text color on top of a link_fg-filled button
         "disabled_fg": "#79808E",  # disabled BUTTON text -- desc_fg is too low-contrast for this
@@ -666,6 +738,7 @@ THEMES = {
         "border": "#6272A4",
         "link_fg": "#8BE9FD",  # Dracula Cyan
         "warning_fg": "#FF5555",  # Dracula Red
+        "danger_active": "#E14747",  # pressed/hover shade of warning_fg
         "accent_active": "#62D9F0",  # pressed/hover shade of link_fg, for filled Primary.TButton
         "accent_fg": "#282A36",  # dark text on top of the bright cyan-filled button, matches bg
         "disabled_fg": "#9AA0C0",  # disabled BUTTON text -- desc_fg happens to equal border in
@@ -1189,6 +1262,25 @@ class App(tk.Tk):
                 ("active", c["accent_active"]),
             ],
             bordercolor=[("disabled", c["border"]), ("pressed", c["accent_active"]), ("active", c["accent_active"])],
+            foreground=[("disabled", c["disabled_fg"])],
+        )
+
+        # Danger.TButton -- the full-reset button, and the only destructive
+        # control in the app. Filled red rather than merely red-texted, so
+        # it can't be mistaken for the ordinary buttons around it.
+        self.style.configure(
+            "Danger.TButton",
+            background=c["warning_fg"],
+            foreground="#FFFFFF",
+            bordercolor=c["warning_fg"],
+            borderwidth=1,
+            relief="flat",
+            padding=(14, 8),
+        )
+        self.style.map(
+            "Danger.TButton",
+            background=[("pressed", c["danger_active"]), ("active", c["danger_active"])],
+            bordercolor=[("pressed", c["danger_active"]), ("active", c["danger_active"])],
             foreground=[("disabled", c["disabled_fg"])],
         )
 
@@ -1956,7 +2048,9 @@ class App(tk.Tk):
         note = ttk.Label(row, text=self.t("reset_all_note"), wraplength=560, style="Desc.TLabel")
         note.pack(side="left", fill="x", expand=True)
         self._desc_labels.append(note)
-        ttk.Button(row, text=self.t("btn_reset_all"), command=self.on_reset_all).pack(side="right", padx=(8, 0))
+        ttk.Button(
+            row, text=self.t("btn_reset_all"), command=self.on_reset_all, style="Danger.TButton"
+        ).pack(side="right", padx=(8, 0))
 
     def on_reset_all(self):
         """Deletes everything the app has written and restarts it, for when
