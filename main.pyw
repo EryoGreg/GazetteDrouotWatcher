@@ -975,6 +975,11 @@ class App(tk.Tk):
         self._vcmd_int = (self.register(self._validate_int_input), "%P")
         self._vcmd_float = (self.register(self._validate_float_input), "%P")
 
+        # Debounce: track the last call time per action key so rapid clicks
+        # on the same button are ignored during the cooldown window.
+        self._debounce_registry: dict[str, float] = {}
+        self._DEBOUNCE_COOLDOWN_SECONDS = 0.8  # 800 ms between identical actions
+
         # Windows renders flag emoji as plain two-letter codes, not actual
         # flag pictures (a deliberate Microsoft choice, not a font bug with
         # a workaround) — so real flag icons are drawn ourselves. Built
@@ -1178,7 +1183,6 @@ class App(tk.Tk):
         self._build_task_section()
         self._build_settings_section()
         self._build_log_section()
-        self._build_reset_section()
 
         self.apply_theme(self.current_theme)
         self.refresh_status()
@@ -1211,6 +1215,27 @@ class App(tk.Tk):
     def _parse_float(raw: str) -> float:
         return float(raw.replace(",", "."))
 
+    # -- debounce -------------------------------------------------------------
+    def _debounce(self, action_key: str, callback):
+        """Wrap a button callback so rapid re-clicks are silently ignored.
+
+        Returns a new callable that checks the elapsed time since the last
+        invocation of `action_key`. If less than the cooldown window has
+        passed, the click is dropped and a note is logged. Otherwise the
+        original callback runs and the timestamp is updated.
+
+        This prevents duplicate popups, race conditions, and mid-operation
+        crashes from enthusiastic clicking."""
+        def wrapper():
+            now = time.monotonic()
+            last = self._debounce_registry.get(action_key, 0.0)
+            if now - last < self._DEBOUNCE_COOLDOWN_SECONDS:
+                _log_ui(f"debounced: {action_key} (clicked too fast, {now - last:.1f}s ago)")
+                return
+            self._debounce_registry[action_key] = now
+            callback()
+        return wrapper
+
     # -- header ---------------------------------------------------------------
     def _build_header(self):
         self.header_frame = ttk.Frame(self, padding=12)
@@ -1226,7 +1251,7 @@ class App(tk.Tk):
         # Sun/moon icon toggle — shows the currently-active mode, click to switch.
         self.theme_toggle = tk.Label(icons_box, cursor="hand2", font=("Segoe UI Emoji", 14))
         self.theme_toggle.pack(side="right")
-        self.theme_toggle.bind("<Button-1>", lambda e: self.on_theme_toggle())
+        self.theme_toggle.bind("<Button-1>", lambda e: self._debounce("theme_toggle", self.on_theme_toggle)())
 
         # Flag icon — click opens a menu ("burger list") of every supported
         # language. First launch defaults to the OS UI language (falling
@@ -1234,7 +1259,7 @@ class App(tk.Tk):
         # and wins over the OS language from then on.
         self.lang_toggle = tk.Label(icons_box, image=self._flag_images[self.lang], cursor="hand2", bd=1, relief="solid")
         self.lang_toggle.pack(side="right", padx=(0, 10))
-        self.lang_toggle.bind("<Button-1>", lambda e: self._show_language_menu(e))
+        self.lang_toggle.bind("<Button-1>", lambda e: self._debounce("language_menu", lambda: self._show_language_menu(e))())
 
         self.desc_label = ttk.Label(self.header_frame, text=self.t("description"), wraplength=720, justify="left")
         self.desc_label.pack(anchor="w", pady=(4, 4))
@@ -1245,7 +1270,7 @@ class App(tk.Tk):
             author_row, text=AUTHOR, font=("Segoe UI", 9, "italic", "underline"), cursor="hand2"
         )
         self.author_link.pack(side="left")
-        self.author_link.bind("<Button-1>", lambda e: webbrowser.open(AUTHOR_URL))
+        self.author_link.bind("<Button-1>", lambda e: self._debounce("author_link", lambda: (_log_ui(f"clicked: author link -> {AUTHOR_URL}"), webbrowser.open(AUTHOR_URL)))())
 
         # App-level preference (like theme/language above, not a watcher
         # setting — lives in gui_prefs.json, applies immediately, no Save
@@ -1255,7 +1280,7 @@ class App(tk.Tk):
             self.header_frame,
             text=self.t("show_guide_checkbox"),
             variable=self.show_guide_var,
-            command=lambda: self._set_show_guide_on_start(self.show_guide_var.get()),
+            command=self._debounce("show_guide_checkbox", lambda: self._set_show_guide_on_start(self.show_guide_var.get())),
         ).pack(anchor="w", pady=(6, 0))
 
         ttk.Separator(self).pack(fill="x")
@@ -1444,12 +1469,12 @@ class App(tk.Tk):
         self.update_download_button = ttk.Button(
             row,
             text=self.t("btn_download_update"),
-            command=self._open_latest_release,
+            command=self._debounce("btn_download_update", self._open_latest_release),
             state="disabled",
             style="Primary.TButton",
         )
         self.update_download_button.pack(side="right", padx=(6, 0))
-        ttk.Button(row, text=self.t("btn_check_updates"), command=self._check_for_updates_async).pack(side="right")
+        ttk.Button(row, text=self.t("btn_check_updates"), command=self._debounce("btn_check_updates", self._check_for_updates_async)).pack(side="right")
 
         self._latest_release_url = RELEASES_PAGE_URL
         self._check_for_updates_async()
@@ -1563,13 +1588,13 @@ class App(tk.Tk):
         ttk.Label(status_row, textvariable=self.status_var, font=("Segoe UI", 9, "bold")).pack(
             side="left", padx=(4, 0)
         )
-        ttk.Button(status_row, text=self.t("btn_refresh"), command=self.refresh_status).pack(side="right")
+        ttk.Button(status_row, text=self.t("btn_refresh"), command=self._debounce("btn_refresh", self.refresh_status)).pack(side="right")
         ttk.Button(
             status_row,
             text=self.t("btn_open_activity_log"),
-            command=lambda: self._open_log_file(UI_LOG_PATH, "btn_open_activity_log"),
+            command=self._debounce("btn_open_activity_log", lambda: self._open_log_file(UI_LOG_PATH, "btn_open_activity_log")),
         ).pack(side="right", padx=(0, 6))
-        ttk.Button(status_row, text=self.t("btn_open_log"), command=self._open_log_file).pack(
+        ttk.Button(status_row, text=self.t("btn_open_log"), command=self._debounce("btn_open_log", self._open_log_file)).pack(
             side="right", padx=(0, 6)
         )
 
@@ -1585,7 +1610,7 @@ class App(tk.Tk):
             ttk.Button(
                 admin_row,
                 text=self.t("btn_restart_admin"),
-                command=self._on_restart_as_admin_click,
+                command=self._debounce("btn_restart_admin", self._on_restart_as_admin_click),
                 style="RestartAdmin.TButton",
             ).pack(side="right", padx=(8, 0))
 
@@ -1594,17 +1619,17 @@ class App(tk.Tk):
         ttk.Button(
             buttons_row,
             text=self.t("btn_install"),
-            command=self.on_install,
+            command=self._debounce("btn_install", self.on_install),
             state=action_state,
             style="Primary.TButton",
         ).pack(side="left", padx=(0, 6))
-        ttk.Button(buttons_row, text=self.t("btn_enable"), command=self.on_enable, state=action_state).pack(
+        ttk.Button(buttons_row, text=self.t("btn_enable"), command=self._debounce("btn_enable", self.on_enable), state=action_state).pack(
             side="left", padx=6
         )
-        ttk.Button(buttons_row, text=self.t("btn_disable"), command=self.on_disable, state=action_state).pack(
+        ttk.Button(buttons_row, text=self.t("btn_disable"), command=self._debounce("btn_disable", self.on_disable), state=action_state).pack(
             side="left", padx=6
         )
-        ttk.Button(buttons_row, text=self.t("btn_uninstall"), command=self.on_uninstall, state=action_state).pack(
+        ttk.Button(buttons_row, text=self.t("btn_uninstall"), command=self._debounce("btn_uninstall", self.on_uninstall), state=action_state).pack(
             side="left", padx=6
         )
         # No tray icon toggle here for now -- the underlying TrayIcon /
@@ -1739,15 +1764,22 @@ class App(tk.Tk):
         buttons_row.pack(side="bottom", fill="x", pady=(8, 0))
         ttk.Separator(outer).pack(side="bottom", fill="x", pady=(4, 0))
         self.save_button = ttk.Button(
-            buttons_row, text=self.t("btn_save"), command=self.on_save_settings, state=action_state
+            buttons_row, text=self.t("btn_save"), command=self._debounce("btn_save", self.on_save_settings), state=action_state
         )
         self.save_button.pack(side="left")
         self.reload_button = ttk.Button(
-            buttons_row, text=self.t("btn_reload"), command=self.load_settings, state=action_state
+            buttons_row, text=self.t("btn_reload"), command=self._debounce("btn_reload", self.load_settings), state=action_state
         )
         self.reload_button.pack(side="left", padx=6)
+        # "Reset everything and restart" lives to the LEFT of "Reset to defaults"
+        # (both on the right side of the row). Admin-only, red Danger style.
+        self.reset_all_button = ttk.Button(
+            buttons_row, text=self.t("btn_reset_all"), command=self._debounce("btn_reset_all", self.on_reset_all),
+            state=action_state, style="Danger.TButton"
+        )
+        self.reset_all_button.pack(side="right", padx=(8, 0))
         self.reset_button = ttk.Button(
-            buttons_row, text=self.t("btn_reset_defaults"), command=self.on_reset_defaults, state=action_state
+            buttons_row, text=self.t("btn_reset_defaults"), command=self._debounce("btn_reset_defaults", self.on_reset_defaults), state=action_state
         )
         self.reset_button.pack(side="right")
         # Not calling _update_action_button_styles() here: SIMPLE_FIELDS
@@ -1794,7 +1826,7 @@ class App(tk.Tk):
         ttk.Button(
             rub_header,
             text=self.t("btn_add_page"),
-            command=lambda: (_log_ui("clicked: Add page"), self._add_rubrique_row(is_new=True)),
+            command=self._debounce("btn_add_page", lambda: (_log_ui("clicked: Add page"), self._add_rubrique_row(is_new=True))),
             state=action_state,
         ).pack(side="right")
 
@@ -1967,7 +1999,7 @@ class App(tk.Tk):
             self._update_action_button_styles()
 
         remove_state = "normal" if self._is_admin_at_launch else "disabled"
-        ttk.Button(row, text="✕", width=3, command=remove, state=remove_state).pack(side="left")
+        ttk.Button(row, text="✕", width=3, command=self._debounce(f"remove_rubrique_{idx}", remove), state=remove_state).pack(side="left")
 
         self.rubrique_rows.append(entry)
         self._update_rubrique_row_style(entry)
@@ -2185,22 +2217,17 @@ class App(tk.Tk):
         )
         self.log_text.pack(fill="x")
 
-    # -- full reset (very bottom of the window) --------------------------------
-    def _build_reset_section(self):
-        row = ttk.Frame(self, padding=(12, 0, 12, 12))
-        row.pack(fill="x", side="bottom")
-        note = ttk.Label(row, text=self.t("reset_all_note"), wraplength=560, style="Desc.TLabel")
-        note.pack(side="left", fill="x", expand=True)
-        self._desc_labels.append(note)
-        ttk.Button(
-            row, text=self.t("btn_reset_all"), command=self.on_reset_all, style="Danger.TButton"
-        ).pack(side="right", padx=(8, 0))
-
     def on_reset_all(self):
         _log_ui("clicked: Reset everything and restart")
         """Deletes everything the app has written and restarts it, for when
         a config carried over from an older version is broken enough that
         editing settings can't fix it."""
+        # Admin-only: the button is disabled when not admin, but double-check
+        # here in case the callback is invoked programmatically.
+        if not self._is_admin_at_launch:
+            _log_ui("result: btn_reset_all -> needs administrator rights")
+            messagebox.showerror(self.t("dlg_reset_all_title"), self.t("dlg_admin_needed_body", action=self.t("btn_reset_all")))
+            return
         # The AppData folder holds the cached copy of the .exe, and Windows
         # locks a running executable -- so if this instance *is* that copy,
         # the delete would half-succeed and leave the folder behind. Send
