@@ -38,8 +38,11 @@ import json
 import os
 import re
 import shutil
+import ssl
+import subprocess
 import sys
 import threading
+import time
 import tkinter as tk
 import types
 import urllib.error
@@ -515,6 +518,99 @@ def _is_admin() -> bool:
         return False
 
 
+# ---------------------------------------------------------------------------
+# Full reset — deletes everything this app has ever written, so a broken or
+# half-migrated config from an older version can be cleared without hunting
+# through AppData by hand.
+#
+# This is the only destructive path in the app, and PROJECT_DIR is wherever
+# the user happens to keep the .exe — very possibly Documents or Downloads,
+# full of files that are none of our business. So nothing here deletes a
+# directory it merely *expects* to be ours: every target is verified to be
+# at an exactly-computed path, to be the right kind of object, and to not be
+# a symlink/junction (which could otherwise redirect a recursive delete
+# somewhere catastrophic).
+# ---------------------------------------------------------------------------
+def _appdata_dir_is_safe_to_delete(target: Path) -> bool:
+    """True only for the one specific folder we own under %LOCALAPPDATA%."""
+    try:
+        local_appdata = Path(os.environ["LOCALAPPDATA"]).resolve(strict=True)
+        expected = (local_appdata / "GazetteDrouotWatcher").resolve(strict=False)
+        if target.resolve(strict=False) != expected:
+            return False
+        # A junction pointing elsewhere would make rmtree walk into some
+        # unrelated tree, so refuse rather than follow it.
+        if target.is_symlink() or not target.is_dir():
+            return False
+        # Belt and braces: never the drive root, never AppData\Local itself.
+        resolved = target.resolve(strict=False)
+        if resolved == local_appdata or resolved.parent == resolved:
+            return False
+        return resolved.name == "GazetteDrouotWatcher"
+    except Exception:
+        return False
+
+
+def _delete_all_app_data() -> tuple[list[str], list[str]]:
+    """Removes the AppData folder plus the legacy next-to-the-exe config
+    files older builds used to write. Returns (deleted, failed) as display
+    strings for the confirmation log."""
+    deleted: list[str] = []
+    failed: list[str] = []
+
+    if APPDATA_DIR.exists():
+        if _appdata_dir_is_safe_to_delete(APPDATA_DIR):
+            try:
+                shutil.rmtree(APPDATA_DIR)
+                deleted.append(str(APPDATA_DIR))
+            except Exception as e:
+                failed.append(f"{APPDATA_DIR} ({e})")
+        else:
+            failed.append(f"{APPDATA_DIR} (failed a safety check, left untouched)")
+
+    # Legacy leftovers from before everything moved to AppData. Frozen only:
+    # running from source, PROJECT_DIR/gazette_watcher/ is the actual source
+    # package, and config.py in it is a real tracked file -- deleting the
+    # developer's own checkout would be an unpleasant surprise.
+    if getattr(sys, "frozen", False):
+        for legacy in (PROJECT_DIR / "gazette_watcher" / "config.py", PROJECT_DIR / "gui_prefs.json"):
+            try:
+                # is_file() is False for directories and for broken links,
+                # so this can only ever remove a real regular file at the
+                # one exact path we constructed.
+                if legacy.is_file() and not legacy.is_symlink():
+                    legacy.unlink()
+                    deleted.append(str(legacy))
+            except Exception as e:
+                failed.append(f"{legacy} ({e})")
+
+        # Only if our own folder is now genuinely empty -- rmdir refuses to
+        # remove a non-empty directory, so anything else living in there
+        # (the user's, or a source checkout) keeps it alive untouched.
+        legacy_dir = PROJECT_DIR / "gazette_watcher"
+        try:
+            if legacy_dir.is_dir() and not legacy_dir.is_symlink() and not any(legacy_dir.iterdir()):
+                legacy_dir.rmdir()
+                deleted.append(str(legacy_dir))
+        except Exception:
+            pass  # non-empty or in use -- nothing worth reporting
+
+    return deleted, failed
+
+
+def _relaunch_self() -> bool:
+    """Starts a fresh copy of this app (the visible one the user launched,
+    not the AppData cache, which the reset just deleted)."""
+    try:
+        if getattr(sys, "frozen", False):
+            os.startfile(sys.executable)
+        else:
+            subprocess.Popen([sys.executable, str(Path(__file__).resolve())], close_fds=True)
+        return True
+    except Exception:
+        return False
+
+
 def _relaunch_as_admin() -> bool:
     """Re-runs this same GUI (script or frozen exe) elevated via the
     standard Windows UAC prompt. Returns whether an elevated process
@@ -916,6 +1012,7 @@ class App(tk.Tk):
         self._build_task_section()
         self._build_settings_section()
         self._build_log_section()
+        self._build_reset_section()
 
         self.apply_theme(self.current_theme)
         self.refresh_status()
@@ -1180,34 +1277,55 @@ class App(tk.Tk):
         written anywhere."""
         latest = url = None
         reason = "update_check_failed"
-        try:
-            req = urllib.request.Request(
-                GITHUB_LATEST_RELEASE_API,
-                headers={"Accept": "application/vnd.github+json", "User-Agent": "GazetteDrouotWatcher"},
-            )
-            with urllib.request.urlopen(req, timeout=8) as resp:
-                data = json.loads(resp.read().decode("utf-8"))
-            latest = str(data.get("tag_name", "")).lstrip("vV")
-            url = data.get("html_url") or RELEASES_PAGE_URL
-            reason = None
-        except urllib.error.HTTPError as e:
-            # GitHub allows 60 unauthenticated API calls per hour per IP,
-            # and we spend one on every launch plus every button click, so
-            # this is genuinely reachable -- especially with several people
-            # behind one address. It answers 403 with the remaining budget
-            # at zero, which is what distinguishes it from a real failure.
-            if e.code in (403, 429) and e.headers.get("X-RateLimit-Remaining") == "0":
-                reason = "update_check_rate_limited"
-            else:
+        # One retry, because the automatic check fires the instant the
+        # window opens -- if that happens right after boot or resume, the
+        # network stack may simply not be up yet, and a single blip
+        # shouldn't be reported as "couldn't check for updates".
+        for attempt in (1, 2):
+            try:
+                req = urllib.request.Request(
+                    GITHUB_LATEST_RELEASE_API,
+                    headers={"Accept": "application/vnd.github+json", "User-Agent": "GazetteDrouotWatcher"},
+                )
+                with urllib.request.urlopen(req, timeout=8) as resp:
+                    data = json.loads(resp.read().decode("utf-8"))
+                latest = str(data.get("tag_name", "")).lstrip("vV")
+                url = data.get("html_url") or RELEASES_PAGE_URL
+                reason = None
+                break
+            except urllib.error.HTTPError as e:
+                # GitHub allows 60 unauthenticated API calls per hour per
+                # IP. We spend one per launch plus one per button click,
+                # so this is only realistically reachable by someone
+                # repeatedly relaunching the app (or several people behind
+                # one address). It answers 403 with the remaining budget at
+                # zero, which is what separates it from a real failure.
+                if e.code in (403, 429) and e.headers.get("X-RateLimit-Remaining") == "0":
+                    reason = "update_check_rate_limited"
+                else:
+                    reason = "update_check_failed"
+                _log_gui_event(f"update check failed: HTTP {e.code} {e.reason}")
+                break  # a real answer from GitHub -- retrying won't change it
+            except urllib.error.URLError as e:
+                # Certificate verification failing is NOT the same as being
+                # offline, and telling someone to check their internet
+                # connection when the real cause is TLS interception (an
+                # antivirus or corporate proxy substituting its own
+                # certificate) sends them looking in the wrong place
+                # entirely. Note we only ever report this -- never retry
+                # with verification disabled, which would turn a warning
+                # sign into an actual vulnerability.
+                if isinstance(getattr(e, "reason", None), ssl.SSLError):
+                    reason = "update_check_tls_blocked"
+                    _log_gui_event(f"update check failed, TLS verification: {e.reason}")
+                    break
+                reason = "update_check_offline"
+                _log_gui_event(f"update check failed, host unreachable (attempt {attempt}): {e.reason}")
+            except Exception as e:
                 reason = "update_check_failed"
-            _log_gui_event(f"update check failed: HTTP {e.code} {e.reason}")
-        except urllib.error.URLError as e:
-            # No route to the internet at all: offline, VPN, proxy, DNS.
-            reason = "update_check_offline"
-            _log_gui_event(f"update check failed, host unreachable: {e.reason}")
-        except Exception as e:
-            reason = "update_check_failed"
-            _log_gui_event(f"update check failed: {type(e).__name__}: {e}")
+                _log_gui_event(f"update check failed (attempt {attempt}): {type(e).__name__}: {e}")
+            if attempt == 1:
+                time.sleep(2)
 
         # This runs on a background thread, so the window may have been
         # closed (and self already destroyed) by the time the request
@@ -1830,6 +1948,67 @@ class App(tk.Tk):
             frame, height=6, wrap="word", font=("Consolas", 9), state="disabled"
         )
         self.log_text.pack(fill="x")
+
+    # -- full reset (very bottom of the window) --------------------------------
+    def _build_reset_section(self):
+        row = ttk.Frame(self, padding=(12, 0, 12, 12))
+        row.pack(fill="x", side="bottom")
+        note = ttk.Label(row, text=self.t("reset_all_note"), wraplength=560, style="Desc.TLabel")
+        note.pack(side="left", fill="x", expand=True)
+        self._desc_labels.append(note)
+        ttk.Button(row, text=self.t("btn_reset_all"), command=self.on_reset_all).pack(side="right", padx=(8, 0))
+
+    def on_reset_all(self):
+        """Deletes everything the app has written and restarts it, for when
+        a config carried over from an older version is broken enough that
+        editing settings can't fix it."""
+        # The AppData folder holds the cached copy of the .exe, and Windows
+        # locks a running executable -- so if this instance *is* that copy,
+        # the delete would half-succeed and leave the folder behind. Send
+        # the user to their own copy instead of failing confusingly.
+        if getattr(sys, "frozen", False):
+            try:
+                running_from_cache = Path(sys.executable).resolve() == CACHED_EXE_PATH.resolve()
+            except Exception:
+                running_from_cache = False
+            if running_from_cache:
+                messagebox.showinfo(self.t("dlg_reset_all_title"), self.t("err_reset_all_running_from_cache"))
+                return
+
+        targets = [str(APPDATA_DIR)]
+        if getattr(sys, "frozen", False):
+            legacy = PROJECT_DIR / "gazette_watcher" / "config.py"
+            if legacy.is_file():
+                targets.append(str(legacy))
+            legacy_prefs = PROJECT_DIR / "gui_prefs.json"
+            if legacy_prefs.is_file():
+                targets.append(str(legacy_prefs))
+
+        if not messagebox.askyesno(
+            self.t("dlg_reset_all_title"),
+            self.t("dlg_reset_all_body", targets="\n".join(f"    {t}" for t in targets)),
+            icon="warning",
+            default="no",
+        ):
+            return
+
+        deleted, failed = _delete_all_app_data()
+        for path in deleted:
+            self.log(self.t("log_reset_all_deleted", path=path))
+        for path in failed:
+            self.log(self.t("log_reset_all_failed", path=path))
+
+        if failed:
+            messagebox.showerror(self.t("dlg_reset_all_title"), self.t("err_reset_all_body", detail="\n".join(failed)))
+            return
+
+        if not _relaunch_self():
+            messagebox.showerror(self.t("dlg_reset_all_title"), self.t("err_reset_all_relaunch"))
+            return
+        # Leave immediately: this instance still holds the now-deleted
+        # settings in memory, and anything it wrote on the way out (window
+        # position, prefs) would recreate the very files just removed.
+        self.destroy()
 
     def log(self, message: str):
         self.log_text.configure(state="normal")

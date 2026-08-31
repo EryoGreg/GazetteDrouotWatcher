@@ -63,6 +63,7 @@ TRANSLATIONS = {
         "update_available": "A new version is available: v{version}.",
         "update_check_failed": "Couldn't check for updates.",
         "update_check_offline": "Couldn't reach GitHub — check your internet connection.",
+        "update_check_tls_blocked": "Secure connection to GitHub was refused — antivirus or network filtering may be blocking it.",
         "update_check_rate_limited": "GitHub is temporarily limiting requests. Try again in an hour.",
         "btn_open_log": "Open log file",
         "log_file_missing": "No log file yet — nothing has run so far.",
@@ -168,6 +169,26 @@ TRANSLATIONS = {
         "dlg_reset_done_title": "Reset",
         "dlg_reset_done_body": "Settings restored to defaults.",
         "section_log": "Action log",
+        "btn_reset_all": "Reset everything and restart",
+        "reset_all_note": (
+            "Deletes every file this app has created and starts it fresh. Use this if settings carried "
+            "over from an older version are causing problems. Your scheduled task is kept."
+        ),
+        "dlg_reset_all_title": "Reset everything?",
+        "dlg_reset_all_body": (
+            "This permanently deletes the following, then restarts the app:\n\n{targets}\n\n"
+            "Your settings go back to their defaults and the app forgets which articles it has already "
+            "seen, so the next check starts from a clean slate. Nothing else on your computer is touched.\n\n"
+            "Continue?"
+        ),
+        "log_reset_all_deleted": "Deleted: {path}",
+        "log_reset_all_failed": "Could NOT delete: {path}",
+        "err_reset_all_body": "Some files could not be deleted:\n\n{detail}\n\nNothing was restarted.",
+        "err_reset_all_relaunch": "Files were deleted, but the app couldn't restart itself. Please open it again manually.",
+        "err_reset_all_running_from_cache": (
+            "This copy of the app is running from the folder it would need to delete, so Windows won't "
+            "let it. Open the copy you normally use instead, and press this button there."
+        ),
         "log_action_dashes": "--- {action} ---",
         "language_menu_title": "Language",
         "welcome_title": 'Welcome to Gazette Drouot Watcher',
@@ -262,6 +283,7 @@ TRANSLATIONS = {
         "update_available": "Une nouvelle version est disponible : v{version}.",
         "update_check_failed": "Impossible de vérifier les mises à jour.",
         "update_check_offline": "Impossible de joindre GitHub — vérifiez votre connexion Internet.",
+        "update_check_tls_blocked": "La connexion sécurisée à GitHub a été refusée — un antivirus ou un filtrage réseau la bloque peut-être.",
         "update_check_rate_limited": "GitHub limite temporairement les requêtes. Réessayez dans une heure.",
         "btn_open_log": "Ouvrir le journal",
         "log_file_missing": "Pas encore de journal — rien ne s'est exécuté pour l'instant.",
@@ -368,6 +390,26 @@ TRANSLATIONS = {
         "dlg_reset_done_title": "Réinitialisation",
         "dlg_reset_done_body": "Paramètres restaurés aux valeurs par défaut.",
         "section_log": "Journal des actions",
+        "btn_reset_all": "Tout réinitialiser et redémarrer",
+        "reset_all_note": (
+            "Supprime tous les fichiers créés par l'application et la relance à neuf. À utiliser si des "
+            "réglages hérités d'une version précédente posent problème. Votre tâche planifiée est conservée."
+        ),
+        "dlg_reset_all_title": "Tout réinitialiser ?",
+        "dlg_reset_all_body": (
+            "Ceci supprime définitivement les éléments suivants, puis redémarre l'application :\n\n{targets}\n\n"
+            "Vos réglages reviennent à leurs valeurs par défaut et l'application oublie quels articles elle a "
+            "déjà vus : la prochaine vérification repart de zéro. Rien d'autre sur votre ordinateur n'est touché.\n\n"
+            "Continuer ?"
+        ),
+        "log_reset_all_deleted": "Supprimé : {path}",
+        "log_reset_all_failed": "Suppression IMPOSSIBLE : {path}",
+        "err_reset_all_body": "Certains fichiers n'ont pas pu être supprimés :\n\n{detail}\n\nRien n'a été redémarré.",
+        "err_reset_all_relaunch": "Les fichiers ont été supprimés, mais l'application n'a pas pu redémarrer seule. Veuillez la rouvrir manuellement.",
+        "err_reset_all_running_from_cache": (
+            "Cette copie de l'application s'exécute depuis le dossier qu'elle devrait supprimer, ce que "
+            "Windows n'autorise pas. Ouvrez plutôt la copie que vous utilisez habituellement et appuyez sur ce bouton là."
+        ),
         "log_action_dashes": "--- {action} ---",
         "language_menu_title": "Langue",
         "welcome_title": 'Bienvenue dans Gazette Drouot Watcher',
@@ -471,6 +513,7 @@ TRANSLATIONS = {
         "update_available": "Hay una nueva versión disponible: v{version}.",
         "update_check_failed": "No se pudieron buscar actualizaciones.",
         "update_check_offline": "No se pudo conectar con GitHub — compruebe su conexión a Internet.",
+        "update_check_tls_blocked": "Se rechazó la conexión segura con GitHub — puede que un antivirus o un filtro de red la esté bloqueando.",
         "update_check_rate_limited": "GitHub está limitando temporalmente las solicitudes. Vuelva a intentarlo en una hora.",
         "btn_open_log": "Abrir archivo de registro",
         "log_file_missing": "Todavía no hay archivo de registro — nada se ha ejecutado aún.",
@@ -577,6 +620,26 @@ TRANSLATIONS = {
         "dlg_reset_done_title": "Restablecido",
         "dlg_reset_done_body": "Configuración restaurada a los valores predeterminados.",
         "section_log": "Registro de acciones",
+        "btn_reset_all": "Restablecer todo y reiniciar",
+        "reset_all_note": (
+            "Elimina todos los archivos creados por la aplicación y la inicia de cero. Úselo si la "
+            "configuración heredada de una versión anterior está causando problemas. Su tarea programada se conserva."
+        ),
+        "dlg_reset_all_title": "¿Restablecer todo?",
+        "dlg_reset_all_body": (
+            "Esto elimina permanentemente lo siguiente y luego reinicia la aplicación:\n\n{targets}\n\n"
+            "Su configuración vuelve a los valores predeterminados y la aplicación olvida qué artículos ya "
+            "ha visto, así que la próxima comprobación empieza desde cero. No se toca nada más en su equipo.\n\n"
+            "¿Continuar?"
+        ),
+        "log_reset_all_deleted": "Eliminado: {path}",
+        "log_reset_all_failed": "NO se pudo eliminar: {path}",
+        "err_reset_all_body": "No se pudieron eliminar algunos archivos:\n\n{detail}\n\nNo se reinició nada.",
+        "err_reset_all_relaunch": "Los archivos se eliminaron, pero la aplicación no pudo reiniciarse sola. Ábrala de nuevo manualmente.",
+        "err_reset_all_running_from_cache": (
+            "Esta copia de la aplicación se está ejecutando desde la carpeta que tendría que eliminar, y "
+            "Windows no lo permite. Abra la copia que usa normalmente y pulse este botón allí."
+        ),
         "log_action_dashes": "--- {action} ---",
         "language_menu_title": "Idioma",
         "welcome_title": 'Bienvenido a Gazette Drouot Watcher',
@@ -675,6 +738,7 @@ TRANSLATIONS = {
         "update_available": "Eine neue Version ist verfügbar: v{version}.",
         "update_check_failed": "Update-Suche fehlgeschlagen.",
         "update_check_offline": "GitHub nicht erreichbar — prüfen Sie Ihre Internetverbindung.",
+        "update_check_tls_blocked": "Die sichere Verbindung zu GitHub wurde abgelehnt — möglicherweise blockiert ein Antivirenprogramm oder ein Netzwerkfilter sie.",
         "update_check_rate_limited": "GitHub begrenzt die Anfragen vorübergehend. Versuchen Sie es in einer Stunde erneut.",
         "btn_open_log": "Protokolldatei öffnen",
         "log_file_missing": "Noch keine Protokolldatei — es wurde bisher noch nichts ausgeführt.",
@@ -781,6 +845,26 @@ TRANSLATIONS = {
         "dlg_reset_done_title": "Zurückgesetzt",
         "dlg_reset_done_body": "Einstellungen auf Standardwerte zurückgesetzt.",
         "section_log": "Aktionsprotokoll",
+        "btn_reset_all": "Alles zurücksetzen und neu starten",
+        "reset_all_note": (
+            "Löscht alle von dieser App erstellten Dateien und startet sie neu. Nutzen Sie das, wenn "
+            "Einstellungen aus einer älteren Version Probleme verursachen. Ihre geplante Aufgabe bleibt erhalten."
+        ),
+        "dlg_reset_all_title": "Alles zurücksetzen?",
+        "dlg_reset_all_body": (
+            "Folgendes wird endgültig gelöscht, danach startet die App neu:\n\n{targets}\n\n"
+            "Ihre Einstellungen kehren zu den Standardwerten zurück und die App vergisst, welche Artikel "
+            "sie bereits gesehen hat — die nächste Prüfung beginnt also von vorn. Sonst wird nichts auf "
+            "Ihrem Computer angerührt.\n\nFortfahren?"
+        ),
+        "log_reset_all_deleted": "Gelöscht: {path}",
+        "log_reset_all_failed": "Konnte NICHT gelöscht werden: {path}",
+        "err_reset_all_body": "Einige Dateien konnten nicht gelöscht werden:\n\n{detail}\n\nEs wurde nichts neu gestartet.",
+        "err_reset_all_relaunch": "Die Dateien wurden gelöscht, aber die App konnte sich nicht selbst neu starten. Bitte öffnen Sie sie manuell.",
+        "err_reset_all_running_from_cache": (
+            "Diese Kopie der App läuft aus dem Ordner, den sie löschen müsste — das lässt Windows nicht "
+            "zu. Öffnen Sie stattdessen die Kopie, die Sie normalerweise verwenden, und drücken Sie dort diese Schaltfläche."
+        ),
         "log_action_dashes": "--- {action} ---",
         "language_menu_title": "Sprache",
         "welcome_title": 'Willkommen bei Gazette Drouot Watcher',
@@ -882,6 +966,7 @@ TRANSLATIONS = {
         "update_available": "Uma nova versão está disponível: v{version}.",
         "update_check_failed": "Não foi possível verificar atualizações.",
         "update_check_offline": "Não foi possível contactar o GitHub — verifique a sua ligação à Internet.",
+        "update_check_tls_blocked": "A ligação segura ao GitHub foi recusada — um antivírus ou filtro de rede pode estar a bloqueá-la.",
         "update_check_rate_limited": "O GitHub está a limitar temporariamente os pedidos. Tente novamente dentro de uma hora.",
         "btn_open_log": "Abrir arquivo de log",
         "log_file_missing": "Ainda não há arquivo de log — nada foi executado até agora.",
@@ -987,6 +1072,26 @@ TRANSLATIONS = {
         "dlg_reset_done_title": "Reposto",
         "dlg_reset_done_body": "Definições repostas para os valores predefinidos.",
         "section_log": "Registo de ações",
+        "btn_reset_all": "Repor tudo e reiniciar",
+        "reset_all_note": (
+            "Elimina todos os ficheiros criados por esta aplicação e inicia-a de novo. Use isto se "
+            "definições vindas de uma versão anterior estiverem a causar problemas. A sua tarefa agendada é mantida."
+        ),
+        "dlg_reset_all_title": "Repor tudo?",
+        "dlg_reset_all_body": (
+            "Isto elimina permanentemente o seguinte e depois reinicia a aplicação:\n\n{targets}\n\n"
+            "As suas definições voltam aos valores predefinidos e a aplicação esquece que artigos já viu, "
+            "por isso a próxima verificação começa do zero. Mais nada no seu computador é tocado.\n\n"
+            "Continuar?"
+        ),
+        "log_reset_all_deleted": "Eliminado: {path}",
+        "log_reset_all_failed": "NÃO foi possível eliminar: {path}",
+        "err_reset_all_body": "Não foi possível eliminar alguns ficheiros:\n\n{detail}\n\nNada foi reiniciado.",
+        "err_reset_all_relaunch": "Os ficheiros foram eliminados, mas a aplicação não conseguiu reiniciar-se sozinha. Abra-a novamente à mão.",
+        "err_reset_all_running_from_cache": (
+            "Esta cópia da aplicação está a correr a partir da pasta que teria de eliminar, e o Windows "
+            "não o permite. Abra antes a cópia que usa normalmente e prima este botão aí."
+        ),
         "log_action_dashes": "--- {action} ---",
         "language_menu_title": "Idioma",
         "welcome_title": 'Bem-vindo ao Gazette Drouot Watcher',
@@ -1082,6 +1187,7 @@ TRANSLATIONS = {
         "update_available": "Доступна новая версия: v{version}.",
         "update_check_failed": "Не удалось проверить обновления.",
         "update_check_offline": "Не удалось связаться с GitHub — проверьте подключение к интернету.",
+        "update_check_tls_blocked": "Защищённое соединение с GitHub отклонено — возможно, его блокирует антивирус или сетевой фильтр.",
         "update_check_rate_limited": "GitHub временно ограничивает запросы. Попробуйте через час.",
         "btn_open_log": "Открыть файл журнала",
         "log_file_missing": "Файла журнала пока нет — ничего ещё не запускалось.",
@@ -1188,6 +1294,25 @@ TRANSLATIONS = {
         "dlg_reset_done_title": "Сброшено",
         "dlg_reset_done_body": "Настройки восстановлены к значениям по умолчанию.",
         "section_log": "Журнал действий",
+        "btn_reset_all": "Сбросить всё и перезапустить",
+        "reset_all_note": (
+            "Удаляет все файлы, созданные приложением, и запускает его с чистого листа. Используйте, если "
+            "настройки, перенесённые из старой версии, вызывают проблемы. Запланированная задача сохраняется."
+        ),
+        "dlg_reset_all_title": "Сбросить всё?",
+        "dlg_reset_all_body": (
+            "Следующее будет удалено безвозвратно, после чего приложение перезапустится:\n\n{targets}\n\n"
+            "Настройки вернутся к значениям по умолчанию, и приложение забудет, какие статьи уже видело, — "
+            "следующая проверка начнётся с нуля. Больше ничего на компьютере не затрагивается.\n\nПродолжить?"
+        ),
+        "log_reset_all_deleted": "Удалено: {path}",
+        "log_reset_all_failed": "НЕ удалось удалить: {path}",
+        "err_reset_all_body": "Некоторые файлы не удалось удалить:\n\n{detail}\n\nПерезапуск не выполнялся.",
+        "err_reset_all_relaunch": "Файлы удалены, но приложение не смогло перезапуститься само. Откройте его вручную.",
+        "err_reset_all_running_from_cache": (
+            "Эта копия приложения запущена из той самой папки, которую нужно удалить, и Windows этого не "
+            "позволяет. Откройте копию, которой обычно пользуетесь, и нажмите эту кнопку там."
+        ),
         "log_action_dashes": "--- {action} ---",
         "language_menu_title": "Язык",
         "welcome_title": 'Добро пожаловать в Gazette Drouot Watcher',
@@ -1284,6 +1409,7 @@ TRANSLATIONS = {
         "update_available": "有新版本可用：v{version}。",
         "update_check_failed": "无法检查更新。",
         "update_check_offline": "无法连接到 GitHub——请检查你的网络连接。",
+        "update_check_tls_blocked": "与 GitHub 的安全连接被拒绝——可能是杀毒软件或网络过滤在阻止它。",
         "update_check_rate_limited": "GitHub 暂时限制了请求次数，请一小时后重试。",
         "btn_open_log": "打开日志文件",
         "log_file_missing": "尚无日志文件——目前还没有运行过。",
@@ -1382,6 +1508,19 @@ TRANSLATIONS = {
         "dlg_reset_done_title": "已恢复",
         "dlg_reset_done_body": "设置已恢复为默认值。",
         "section_log": "操作日志",
+        "btn_reset_all": "重置全部并重启",
+        "reset_all_note": "删除本程序创建的所有文件并重新开始。如果从旧版本沿用下来的设置引起问题，可以使用此功能。你的计划任务会被保留。",
+        "dlg_reset_all_title": "重置全部？",
+        "dlg_reset_all_body": (
+            "这将永久删除以下内容，然后重启程序：\n\n{targets}\n\n"
+            "你的设置会恢复为默认值，程序也会忘记已经看过哪些文章，因此下次检查将从头开始。"
+            "电脑上的其他内容不会被改动。\n\n要继续吗？"
+        ),
+        "log_reset_all_deleted": "已删除：{path}",
+        "log_reset_all_failed": "无法删除：{path}",
+        "err_reset_all_body": "部分文件无法删除：\n\n{detail}\n\n没有执行重启。",
+        "err_reset_all_relaunch": "文件已删除，但程序无法自行重启。请手动再次打开它。",
+        "err_reset_all_running_from_cache": "这个程序副本正是从它需要删除的文件夹中运行的，Windows 不允许这样做。请改为打开你平时使用的那个副本，并在那里点击此按钮。",
         "log_action_dashes": "--- {action} ---",
         "language_menu_title": "语言",
         "welcome_title": '欢迎使用 Gazette Drouot Watcher',
@@ -1464,6 +1603,7 @@ TRANSLATIONS = {
         "update_available": "新しいバージョンが利用可能です：v{version}。",
         "update_check_failed": "アップデートを確認できませんでした。",
         "update_check_offline": "GitHub に接続できませんでした——インターネット接続を確認してください。",
+        "update_check_tls_blocked": "GitHub への安全な接続が拒否されました——ウイルス対策ソフトやネットワークフィルターが遮断している可能性があります。",
         "update_check_rate_limited": "GitHub が一時的にリクエストを制限しています。1 時間後にもう一度お試しください。",
         "btn_open_log": "ログファイルを開く",
         "log_file_missing": "まだログファイルがありません——これまでに実行されたことがありません。",
@@ -1570,6 +1710,22 @@ TRANSLATIONS = {
         "dlg_reset_done_title": "リセット完了",
         "dlg_reset_done_body": "設定を既定値に戻しました。",
         "section_log": "操作ログ",
+        "btn_reset_all": "すべてリセットして再起動",
+        "reset_all_note": (
+            "このアプリが作成したすべてのファイルを削除し、まっさらな状態で起動し直します。古いバージョン"
+            "から引き継いだ設定が原因で不具合が出ている場合にお使いください。スケジュールされたタスクは残ります。"
+        ),
+        "dlg_reset_all_title": "すべてリセットしますか？",
+        "dlg_reset_all_body": (
+            "以下を完全に削除し、その後アプリを再起動します：\n\n{targets}\n\n"
+            "設定は既定値に戻り、どの記事を既に見たかもリセットされるため、次回のチェックは最初からやり直"
+            "しになります。パソコン上のそれ以外のものには一切触れません。\n\n続行しますか？"
+        ),
+        "log_reset_all_deleted": "削除しました：{path}",
+        "log_reset_all_failed": "削除できませんでした：{path}",
+        "err_reset_all_body": "一部のファイルを削除できませんでした：\n\n{detail}\n\n再起動は行っていません。",
+        "err_reset_all_relaunch": "ファイルは削除しましたが、アプリが自動で再起動できませんでした。手動でもう一度開いてください。",
+        "err_reset_all_running_from_cache": "このアプリのコピーは、削除しようとしているフォルダー自体から実行されているため、Windows が許可しません。普段お使いのコピーを開き、そちらでこのボタンを押してください。",
         "log_action_dashes": "--- {action} ---",
         "language_menu_title": "言語",
         "welcome_title": 'Gazette Drouot Watcher へようこそ',
@@ -1665,6 +1821,7 @@ TRANSLATIONS = {
         "update_available": "एक नया संस्करण उपलब्ध है: v{version}।",
         "update_check_failed": "अपडेट जाँचे नहीं जा सके।",
         "update_check_offline": "GitHub से संपर्क नहीं हो सका — अपना इंटरनेट कनेक्शन जाँचें।",
+        "update_check_tls_blocked": "GitHub से सुरक्षित कनेक्शन अस्वीकृत हो गया — हो सकता है कोई एंटीवायरस या नेटवर्क फ़िल्टर इसे रोक रहा हो।",
         "update_check_rate_limited": "GitHub फ़िलहाल अनुरोधों को सीमित कर रहा है। एक घंटे बाद फिर कोशिश करें।",
         "btn_open_log": "लॉग फ़ाइल खोलें",
         "log_file_missing": "अभी तक कोई लॉग फ़ाइल नहीं है — अब तक कुछ भी नहीं चला है।",
@@ -1769,6 +1926,22 @@ TRANSLATIONS = {
         "dlg_reset_done_title": "रीसेट हो गया",
         "dlg_reset_done_body": "सेटिंग्स डिफ़ॉल्ट पर पुनर्स्थापित कर दी गई हैं।",
         "section_log": "कार्रवाई लॉग",
+        "btn_reset_all": "सब कुछ रीसेट करें और पुनः आरंभ करें",
+        "reset_all_note": (
+            "इस ऐप द्वारा बनाई गई सभी फ़ाइलें हटाकर इसे नए सिरे से शुरू करता है। अगर पुराने संस्करण से आई "
+            "सेटिंग्स दिक्कत कर रही हों तो इसका उपयोग करें। आपका अनुसूचित कार्य बना रहेगा।"
+        ),
+        "dlg_reset_all_title": "सब कुछ रीसेट करें?",
+        "dlg_reset_all_body": (
+            "इससे निम्नलिखित स्थायी रूप से हट जाएगा, और फिर ऐप पुनः आरंभ होगा:\n\n{targets}\n\n"
+            "आपकी सेटिंग्स डिफ़ॉल्ट पर लौट आएँगी और ऐप भूल जाएगा कि उसने कौन-से लेख पहले देखे थे, इसलिए अगली "
+            "जाँच शुरुआत से होगी। आपके कंप्यूटर पर और कुछ भी नहीं छुआ जाएगा।\n\nजारी रखें?"
+        ),
+        "log_reset_all_deleted": "हटाया गया: {path}",
+        "log_reset_all_failed": "हटाया नहीं जा सका: {path}",
+        "err_reset_all_body": "कुछ फ़ाइलें हटाई नहीं जा सकीं:\n\n{detail}\n\nकुछ भी पुनः आरंभ नहीं किया गया।",
+        "err_reset_all_relaunch": "फ़ाइलें हट गईं, लेकिन ऐप खुद को पुनः आरंभ नहीं कर सका। कृपया इसे मैन्युअल रूप से दोबारा खोलें।",
+        "err_reset_all_running_from_cache": "ऐप की यह प्रति उसी फ़ोल्डर से चल रही है जिसे हटाना है, और Windows इसकी अनुमति नहीं देता। इसके बजाय वह प्रति खोलें जिसे आप सामान्यतः उपयोग करते हैं और वहाँ यह बटन दबाएँ।",
         "log_action_dashes": "--- {action} ---",
         "language_menu_title": "भाषा",
         "welcome_title": 'Gazette Drouot Watcher में आपका स्वागत है',
@@ -1864,6 +2037,7 @@ TRANSLATIONS = {
         "update_available": "يتوفر إصدار جديد: v{version}.",
         "update_check_failed": "تعذّر التحقق من التحديثات.",
         "update_check_offline": "تعذّر الوصول إلى GitHub — تحقق من اتصالك بالإنترنت.",
+        "update_check_tls_blocked": "تم رفض الاتصال الآمن بـ GitHub — قد يحجبه برنامج مكافحة فيروسات أو تصفية للشبكة.",
         "update_check_rate_limited": "يحدّ GitHub من الطلبات مؤقتًا. أعد المحاولة بعد ساعة.",
         "btn_open_log": "فتح ملف السجل",
         "log_file_missing": "لا يوجد ملف سجل بعد — لم يتم تشغيل أي شيء حتى الآن.",
@@ -1967,6 +2141,22 @@ TRANSLATIONS = {
         "dlg_reset_done_title": "تمت إعادة التعيين",
         "dlg_reset_done_body": "تمت استعادة الإعدادات الافتراضية.",
         "section_log": "سجل الإجراءات",
+        "btn_reset_all": "إعادة تعيين كل شيء وإعادة التشغيل",
+        "reset_all_note": (
+            "يحذف كل الملفات التي أنشأها هذا التطبيق ويبدأ من جديد. استخدمه إذا كانت إعدادات منقولة من "
+            "إصدار أقدم تسبب مشكلات. تبقى مهمتك المجدولة كما هي."
+        ),
+        "dlg_reset_all_title": "إعادة تعيين كل شيء؟",
+        "dlg_reset_all_body": (
+            "سيؤدي هذا إلى حذف ما يلي نهائيًا، ثم إعادة تشغيل التطبيق:\n\n{targets}\n\n"
+            "ستعود إعداداتك إلى قيمها الافتراضية وسينسى التطبيق المقالات التي رآها من قبل، لذا سيبدأ الفحص "
+            "التالي من الصفر. لن يُمَس أي شيء آخر على جهازك.\n\nهل تريد المتابعة؟"
+        ),
+        "log_reset_all_deleted": "تم الحذف: {path}",
+        "log_reset_all_failed": "تعذّر الحذف: {path}",
+        "err_reset_all_body": "تعذّر حذف بعض الملفات:\n\n{detail}\n\nلم تتم إعادة تشغيل أي شيء.",
+        "err_reset_all_relaunch": "تم حذف الملفات، لكن التطبيق لم يتمكن من إعادة تشغيل نفسه. يُرجى فتحه يدويًا مرة أخرى.",
+        "err_reset_all_running_from_cache": "هذه النسخة من التطبيق تعمل من المجلد نفسه الذي يجب حذفه، وويندوز لا يسمح بذلك. افتح النسخة التي تستخدمها عادةً واضغط هذا الزر من هناك.",
         "log_action_dashes": "--- {action} ---",
         "language_menu_title": "اللغة",
         "welcome_title": 'مرحبًا بك في Gazette Drouot Watcher',
