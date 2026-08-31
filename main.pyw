@@ -2348,7 +2348,14 @@ class App(tk.Tk):
         # extraction can collide with stale handles and crash with
         # "Failed to start embedded python interpreter: Failed to import
         # encodings module" on consecutive resets.
-        time.sleep(0.5)
+        time.sleep(2)
+        # Clean up stale PyInstaller extraction folders (%TEMP%\_MEIxxxxx)
+        # before relaunching. The current instance's extraction folder is
+        # still in use (DLLs loaded), so it will be skipped. Old ones from
+        # previous resets are dead and will be removed, preventing the new
+        # instance's extraction from colliding with abandoned folders.
+        if getattr(sys, "frozen", False):
+            _cleanup_stale_pyinstaller_temp()
         if not _relaunch_self():
             messagebox.showerror(self.t("dlg_reset_all_title"), self.t("err_reset_all_relaunch"))
             return
