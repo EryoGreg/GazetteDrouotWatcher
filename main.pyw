@@ -1773,15 +1773,17 @@ class App(tk.Tk):
         self.reload_button.pack(side="left", padx=6)
         # "Reset everything and restart" lives to the LEFT of "Reset to defaults"
         # (both on the right side of the row). Admin-only, red Danger style.
-        self.reset_all_button = ttk.Button(
-            buttons_row, text=self.t("btn_reset_all"), command=self._debounce("btn_reset_all", self.on_reset_all),
-            state=action_state, style="Danger.TButton"
-        )
-        self.reset_all_button.pack(side="right", padx=(8, 0))
+        # Pack order matters: with side="right", the LAST packed item is leftmost,
+        # so we pack "Reset to defaults" first (rightmost), then "Reset everything" (left of it).
         self.reset_button = ttk.Button(
             buttons_row, text=self.t("btn_reset_defaults"), command=self._debounce("btn_reset_defaults", self.on_reset_defaults), state=action_state
         )
         self.reset_button.pack(side="right")
+        self.reset_all_button = ttk.Button(
+            buttons_row, text=self.t("btn_reset_all"), command=self._debounce("btn_reset_all", self.on_reset_all),
+            state=action_state, style="Danger.TButton"
+        )
+        self.reset_all_button.pack(side="right", padx=(0, 8))
         # Not calling _update_action_button_styles() here: SIMPLE_FIELDS
         # rows don't exist yet at this point (they're added right below),
         # and a freshly created ttk.Button already renders in the plain/
