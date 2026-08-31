@@ -267,7 +267,7 @@ AUTHOR_URL = "https://github.com/EryoGreg?tab=repositories"
 
 # Bump this on every release — compared against GitHub's "latest release"
 # tag by the Updates section to tell the user a newer version exists.
-APP_VERSION = "1.2.0"
+APP_VERSION = "1.2.1"
 GITHUB_REPO = "EryoGreg/GazetteDrouotWatcher"
 GITHUB_LATEST_RELEASE_API = f"https://api.github.com/repos/{GITHUB_REPO}/releases/latest"
 RELEASES_PAGE_URL = f"https://github.com/{GITHUB_REPO}/releases/latest"
