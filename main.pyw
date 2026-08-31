@@ -41,6 +41,7 @@ import shutil
 import ssl
 import subprocess
 import sys
+import tempfile
 import threading
 import time
 import tkinter as tk
@@ -86,6 +87,67 @@ APPDATA_DIR.mkdir(parents=True, exist_ok=True)
 # — e.g. Downloads -> Documents — doesn't silently break the scheduled task.
 CACHED_EXE_PATH = APPDATA_DIR / "GazetteDrouotWatcher.exe"
 LAST_KNOWN_EXE_PATH_FILE = APPDATA_DIR / "last_known_exe_path.txt"
+
+
+def _cleanup_stale_pyinstaller_temp(max_to_remove: int = 40) -> int:
+    """Removes leftover PyInstaller onefile extraction folders (%TEMP%\\_MEIxxxxx).
+
+    A onefile .exe unpacks itself into one of these on every launch and
+    deletes it on exit -- except the delete intermittently loses a race
+    against Windows releasing the DLLs the process had loaded, and the
+    bootloader then gives up (and, in windowed mode, shows the user a
+    "Failed to remove temporary directory" warning). Each abandoned folder
+    holds the bundled browser driver, so they are ~100 MB each; on this
+    machine 75 of them had quietly accumulated to 727 MB since March.
+
+    Safety comes from liveness rather than from guessing ownership: a
+    folder still in use by *any* running program has its DLLs locked, so
+    the delete fails and that folder is skipped. Combined with skipping
+    our own folder and anything touched recently, that makes it safe even
+    though other PyInstaller apps use the same naming scheme -- the worst
+    case is clearing another app's already-dead leftovers, which are
+    equally garbage.
+
+    Returns how many folders were removed."""
+    removed = 0
+    try:
+        temp_root = Path(tempfile.gettempdir())
+        # The folder this very process is running from, which must survive.
+        own = getattr(sys, "_MEIPASS", None)
+        own_resolved = Path(own).resolve() if own else None
+        cutoff = time.time() - 3600  # anything touched in the last hour is left alone
+
+        for candidate in temp_root.glob("_MEI*"):
+            if removed >= max_to_remove:
+                break  # keep startup snappy; the rest go next time
+            try:
+                if not candidate.is_dir() or candidate.is_symlink():
+                    continue
+                if own_resolved and candidate.resolve() == own_resolved:
+                    continue
+                if candidate.stat().st_mtime > cutoff:
+                    continue
+                # Any locked file (i.e. a live process) makes this fail, and
+                # the folder is simply left where it is.
+                shutil.rmtree(candidate)
+                removed += 1
+            except OSError:
+                continue
+    except Exception:
+        pass  # never let housekeeping break startup
+    return removed
+
+
+def _cleanup_stale_temp_in_background():
+    """Runs the sweep off the main thread -- it can touch hundreds of
+    megabytes and must not delay the window appearing."""
+
+    def worker():
+        count = _cleanup_stale_pyinstaller_temp()
+        if count:
+            _log_gui_event(f"cleaned up {count} leftover temporary folder(s) from previous runs")
+
+    threading.Thread(target=worker, daemon=True).start()
 
 
 def _refresh_exe_cache():
@@ -267,7 +329,7 @@ AUTHOR_URL = "https://github.com/EryoGreg?tab=repositories"
 
 # Bump this on every release — compared against GitHub's "latest release"
 # tag by the Updates section to tell the user a newer version exists.
-APP_VERSION = "1.2.2"
+APP_VERSION = "1.2.3"
 GITHUB_REPO = "EryoGreg/GazetteDrouotWatcher"
 GITHUB_LATEST_RELEASE_API = f"https://api.github.com/repos/{GITHUB_REPO}/releases/latest"
 RELEASES_PAGE_URL = f"https://github.com/{GITHUB_REPO}/releases/latest"
@@ -2187,10 +2249,16 @@ if __name__ == "__main__":
         # unless the visible copy of the app is gone, in which case this
         # cleans up after itself instead (see _maybe_self_destruct_if_deleted).
         if not _maybe_self_destruct_if_deleted():
+            # Scheduled runs are where these leftovers mostly come from, so
+            # sweep here too -- synchronously, since this process exits as
+            # soon as the check finishes and a daemon thread would just be
+            # killed mid-delete. Capped, so it never delays a run for long.
+            _cleanup_stale_pyinstaller_temp(max_to_remove=10)
             from gazette_watcher import watcher
 
             watcher.run()
     else:
         _refresh_exe_cache()
         _sync_link_protocol()
+        _cleanup_stale_temp_in_background()
         App().mainloop()
