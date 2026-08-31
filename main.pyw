@@ -654,26 +654,65 @@ def _looks_like_source_checkout(folder: Path) -> bool:
 
 
 def _delete_tree_resilient(root: Path) -> list[str]:
-    """Deletes `root` bottom-up, retrying each entry briefly, and returns
+    """Deletes `root` bottom-up, retrying each entry aggressively, and returns
     whatever survived instead of aborting the whole operation.
 
     shutil.rmtree gives up entirely the moment one file is locked, which in
     practice meant a single transient handle on watcher.log -- Windows
     Search indexing it, an antivirus scanning it, or the user having it
     open in a viewer -- blocked the entire reset. Everything here is
-    independent, so one stubborn file shouldn't save the rest."""
+    independent, so one stubborn file shouldn't save the rest.
+
+    Uses escalating retries (up to 10) with increasing delays and clears
+    file attributes (read-only, etc.) before each attempt. Falls back to
+    the Windows API (DeleteFileW / RemoveDirectoryW) for stubborn files."""
     survivors: list[str] = []
 
+    def _clear_attributes(path: Path):
+        """Remove read-only / system / hidden attributes so deletion can proceed."""
+        try:
+            import stat
+            path.chmod(stat.S_IWRITE | stat.S_IREAD)
+        except OSError:
+            pass
+
+    def _win32_delete_file(path: str) -> bool:
+        """Try DeleteFileW as a last resort."""
+        try:
+            import ctypes
+            result = ctypes.windll.kernel32.DeleteFileW(path)
+            return bool(result)
+        except Exception:
+            return False
+
+    def _win32_remove_directory(path: str) -> bool:
+        """Try RemoveDirectoryW as a last resort."""
+        try:
+            import ctypes
+            result = ctypes.windll.kernel32.RemoveDirectoryW(path)
+            return bool(result)
+        except Exception:
+            return False
+
     def remove(path: Path, remover):
-        # Two quick retries: the common case is a handle being released a
-        # fraction of a second later, not a permanent lock.
-        for attempt in range(3):
+        # Escalating retries: quick first, then longer pauses for stubborn locks
+        delays = [0.1, 0.2, 0.3, 0.5, 0.5, 1.0, 1.0, 1.0, 1.0, 1.0]
+        for attempt, delay in enumerate(delays):
             try:
+                _clear_attributes(path)
                 remover(path)
                 return True
             except OSError:
-                if attempt < 2:
-                    time.sleep(0.25)
+                if attempt < len(delays) - 1:
+                    time.sleep(delay)
+                else:
+                    # Last resort: try the Windows API directly
+                    if path.is_file():
+                        if _win32_delete_file(str(path)):
+                            return True
+                    elif path.is_dir():
+                        if _win32_remove_directory(str(path)):
+                            return True
         survivors.append(str(path))
         return False
 
