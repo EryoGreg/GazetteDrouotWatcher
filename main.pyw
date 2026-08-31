@@ -231,6 +231,12 @@ def _maybe_self_destruct_if_deleted() -> bool:
 
 CONFIG_PATH = APPDATA_DIR / "config.py"
 
+# After a "Reset everything and restart", the entire APPDATA_DIR (including
+# the directory itself) is deleted before a fresh instance launches.
+# Ensure the parent directory exists before attempting to write config.py,
+# otherwise CONFIG_PATH.write_text() raises FileNotFoundError.
+APPDATA_DIR.mkdir(parents=True, exist_ok=True)
+
 if not CONFIG_PATH.exists():
     # Older builds kept config.py in gazette_watcher/config.py next to the
     # exe — if one's sitting there with the user's actual customized
