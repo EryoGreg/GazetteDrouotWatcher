@@ -2220,10 +2220,24 @@ class App(tk.Tk):
         self.log_text.pack(fill="x")
 
     def on_reset_all(self):
-        _log_ui("clicked: Reset everything and restart")
         """Deletes everything the app has written and restarts it, for when
         a config carried over from an older version is broken enough that
         editing settings can't fix it."""
+        try:
+            self._do_reset_all()
+        except Exception as exc:
+            # Safety net: never let an unexpected exception crash the app
+            _log_ui(f"ERROR: reset_all crashed with: {exc}")
+            try:
+                messagebox.showerror(
+                    self.t("dlg_reset_all_title"),
+                    f"Reset failed unexpectedly:\n\n{exc}\n\nPlease try again or restart the app manually.",
+                )
+            except Exception:
+                pass
+
+    def _do_reset_all(self):
+        _log_ui("clicked: Reset everything and restart")
         # Admin-only: the button is disabled when not admin, but double-check
         # here in case the callback is invoked programmatically.
         if not self._is_admin_at_launch:
@@ -2261,6 +2275,21 @@ class App(tk.Tk):
             return
 
         _log_ui("full reset confirmed by user, deleting application data")
+
+        # Close the tray icon first so it releases any file handles it may
+        # hold (log files, prefs, etc.) before we try to delete APPDATA_DIR.
+        # This prevents "file in use" failures on consecutive resets.
+        if self._tray_icon is not None:
+            try:
+                self._tray_icon.stop()
+                self._tray_icon = None
+            except Exception:
+                pass
+
+        # Flush the activity log one last time so the delete entry is on disk
+        # before we tear everything down.
+        _log_ui("flushing log before deletion")
+
         deleted, failed = _delete_all_app_data()
         for _p in deleted:
             _log_ui(f"deleted: {_p}")
