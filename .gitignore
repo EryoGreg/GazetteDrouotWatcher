@@ -24,3 +24,7 @@ gui_prefs.json
 
 # Claude Code's own local tool-permission settings — not part of the project
 .claude/
+
+# Windows: a ">nul" redirect run under Git Bash creates a real file called
+# "nul" instead of hitting the null device.
+nul
